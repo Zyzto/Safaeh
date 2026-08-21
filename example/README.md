@@ -1,8 +1,9 @@
 # Safaeh example
 
-Bilingual catalog of `package:safaeh` chrome (`example/lib/app.dart`,
-`catalog.dart`, `pages.dart`). EN/AR + light/dark toggles. No
-`mobile_scanner`, Riverpod, or `easy_localization`.
+Bilingual vertical gallery of `package:safaeh` chrome (`example/lib/app.dart`,
+`catalog.dart`, `gallery.dart`, `pages.dart`). Every demo is on one scrolling
+page — no tap-to-open. EN/AR + light/dark toggles. No `mobile_scanner`,
+Riverpod, or `easy_localization`.
 
 Live: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
 

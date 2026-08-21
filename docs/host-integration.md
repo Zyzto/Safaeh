@@ -18,6 +18,12 @@ package — pass a closure.
 
 Phone sheets ignore `railWidthOf`.
 
+## Confirm result
+
+`showSafaehConfirm` returns `true` if confirmed, `false` if the phone
+cancel button is pressed, and `null` if the route is dismissed (tablet
+close control or barrier tap). Treat only `ok == true` as confirmed.
+
 ## `titleBuilder`
 
 Every titled sheet accepts `SafaehTitleBuilder`:

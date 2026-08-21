@@ -16,6 +16,7 @@ Widget buildSafaehSheetShell({
   double padding = kSafaehSheetPadding,
 }) {
   return SafeArea(
+    top: false,
     bottom: false,
     child: SingleChildScrollView(
       child: Padding(
@@ -45,12 +46,7 @@ Widget buildSafaehSheetShell({
                   children: [
                     for (int i = 0; i < actions.length; i++) ...[
                       if (i > 0) const SizedBox(width: _kActionsSpacing),
-                      Focus(
-                        canRequestFocus: false,
-                        skipTraversal: true,
-                        descendantsAreFocusable: false,
-                        child: actions[i],
-                      ),
+                      actions[i],
                     ],
                   ],
                 ),

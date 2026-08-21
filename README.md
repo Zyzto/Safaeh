@@ -215,7 +215,9 @@ other `showSafaeh*` helpers (`railWidthOf`, `motion`, …).
 ### 5. Confirm and text input
 
 Host passes every label. Phone shows cancel in the action row; tablet uses the
-sheet close control.
+sheet close control. `showSafaehConfirm` returns `true` if confirmed, `false`
+if the phone cancel button is pressed, and `null` if dismissed (tablet close
+or barrier). Treat only `ok == true` as confirmed.
 
 ```dart
 final ok = await showSafaehConfirm(
@@ -332,7 +334,7 @@ tests stay green.
 
 ## UI inventory
 
-**Sheets:** `showSafaeh`, `showSafaehPicker`, `SafaehOption`, `showSafaehTilePicker`, `SafaehTileOption`, `SafaehTilePickerBody`, `showSafaehConfirm`, `SafaehConfirmSheet`, `showSafaehTextInput`, `SafaehTextInputSheet`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile`, `kSheetContentPadding`
+**Sheets:** `showSafaeh`, `showSafaehPicker`, `SafaehOption`, `showSafaehTilePicker`, `SafaehTileOption`, `SafaehTilePickerBody`, `SafaehTileBuilder`, `showSafaehConfirm`, `SafaehConfirmSheet`, `showSafaehTextInput`, `SafaehTextInputSheet`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile`, `kSheetContentPadding`, `kSafaehSheetPadding`, `SafaehTitleBuilder`, `SafaehTransition`
 
 **Dialog:** `showSafaehDialog`
 
@@ -375,8 +377,8 @@ tests stay green.
 
 A Riverpod-free catalog lives in [`example/`](example/) — same split as
 [Edadat](https://github.com/Zyzto/Edadat): `catalog.dart` (EN/AR copy),
-`app.dart` (theme + home), and a page per public API. Language and theme
-toggles, no `mobile_scanner`.
+`app.dart` (theme + home), and a vertical gallery of every public API.
+Language and theme toggles, no `mobile_scanner`.
 
 Live web build: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
 
@@ -400,7 +402,7 @@ dart analyze && flutter test
 
 ## Branding
 
-The logo wordmark uses **[Baz](https://www.1001fonts.com/baz-font.html)** (Baz Light) — the same Arabic typeface as [Edadat](https://github.com/Zyzto/Edadat) and [Siglat](https://github.com/Zyzto/Siglat). The SVG outlines <span dir="rtl">صــفائح</span> (tatweel after <span dir="rtl">ص</span>) so GitHub renders without loading the font.
+The logo wordmark uses **[Baz](https://www.1001fonts.com/baz-font.html)** (Baz Light) — the same Arabic typeface as [Edadat](https://github.com/Zyzto/Edadat) and [Siglat](https://github.com/Zyzto/Siglat). The SVG outlines <span dir="rtl">صــفائح</span> (tatweel after <span dir="rtl">ص</span>) so GitHub renders without loading the font. Baz is not registered as a package font and the OTF is not shipped.
 
 ---
 

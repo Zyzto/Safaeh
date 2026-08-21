@@ -71,24 +71,39 @@ void main() {
   testWidgets('scrollToPageSection reveals a section key', (tester) async {
     final target = GlobalKey();
 
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: ListView(
-            children: [
-              const SizedBox(height: 500, child: Text('above')),
-              SizedBox(key: target, height: 80, child: const Text('section-z')),
-              const SizedBox(height: 500),
-            ],
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 900, child: Text('above')),
+                SizedBox(
+                  key: target,
+                  height: 80,
+                  child: const Text('section-z'),
+                ),
+                const SizedBox(height: 500),
+              ],
+            ),
           ),
         ),
       ),
     );
 
+    final before = tester.getTopLeft(find.text('section-z')).dy;
+    expect(before, greaterThan(800));
+
     await scrollToPageSection(target, ensureDuration: Duration.zero);
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.text('section-z'), findsOneWidget);
-    expect(tester.getTopLeft(find.text('section-z')).dy, lessThan(600));
+    final after = tester.getTopLeft(find.text('section-z')).dy;
+    expect(after, lessThan(before - 400));
   });
 
   testWidgets('safaehActivePageSectionId follows the viewport', (tester) async {
@@ -161,6 +176,96 @@ void main() {
     );
 
     expect(find.text('On this page'), findsNothing);
+  });
+
+  testWidgets('active index marker is on the start edge in RTL', (tester) async {
+    final alpha = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            body: SafaehPageIndex(
+              title: 'On this page',
+              entries: [
+                SafaehPageIndexEntry(id: 'alpha', label: 'Alpha', key: alpha),
+              ],
+              activeId: 'alpha',
+              onSelect: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final box = tester.widget<Container>(
+      find.ancestor(of: find.text('Alpha'), matching: find.byType(Container)).first,
+    );
+    expect(box.decoration, isA<BoxDecoration>());
+    final border = (box.decoration! as BoxDecoration).border;
+    expect(border, isA<BorderDirectional>());
+    final start = (border! as BorderDirectional).start;
+    expect(start.width, 2.5);
+    expect(start.color, isNot(equals(Colors.transparent)));
+  });
+
+  testWidgets('scrollToPageSection zeros motion when animations are disabled', (
+    tester,
+  ) async {
+    final target = GlobalKey();
+    Duration? resolved;
+
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          );
+        },
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              resolved = safaehResolvedMotion(
+                context,
+                const Duration(milliseconds: 280),
+              );
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 900, child: Text('above')),
+                    SizedBox(
+                      key: target,
+                      height: 80,
+                      child: const Text('section-z'),
+                    ),
+                    const SizedBox(height: 500),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(resolved, Duration.zero);
+    final before = tester.getTopLeft(find.text('section-z')).dy;
+    expect(before, greaterThan(800));
+
+    await scrollToPageSection(
+      target,
+      ensureDuration: const Duration(milliseconds: 280),
+    );
+    await tester.pump();
+    expect(find.text('section-z'), findsOneWidget);
+    final after = tester.getTopLeft(find.text('section-z')).dy;
+    expect(after, lessThan(before - 400));
   });
 }
 

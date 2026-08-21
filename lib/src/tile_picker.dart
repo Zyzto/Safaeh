@@ -71,6 +71,7 @@ class SafaehTilePickerBody<T> extends StatelessWidget {
         ((title != null && title!.isNotEmpty) || titleBuilder != null);
 
     return SafeArea(
+      top: false,
       bottom: false,
       child: SingleChildScrollView(
         child: Padding(

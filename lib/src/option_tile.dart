@@ -35,18 +35,23 @@ class SafaehOptionTile extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final onTapEnabled = enabled ? onTap : null;
+    final onSelected = selectedFill == null
+        ? cs.onPrimaryContainer
+        : cs.onSurface;
     final titleColor = destructive
         ? cs.error
-        : (enabled ? cs.onSurface : cs.onSurface.withValues(alpha: 0.38));
+        : (enabled
+              ? (selected ? onSelected : cs.onSurface)
+              : cs.onSurface.withValues(alpha: 0.38));
     final subtitleColor = destructive
-        ? cs.error.withValues(alpha: 0.8)
-        : cs.onSurfaceVariant;
+        ? cs.error.withValues(alpha: 0.85)
+        : (selected ? onSelected : cs.onSurfaceVariant);
     final fill = selected
         ? (selectedFill ?? cs.primaryContainer)
         : cs.surfaceContainerLow;
     final border = selected
         ? (selectedBorder ?? cs.primary)
-        : cs.outlineVariant.withValues(alpha: 0.45);
+        : cs.outline;
 
     return Material(
       color: fill,

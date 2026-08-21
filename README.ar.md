@@ -244,7 +244,7 @@ final mode = await showSafaehTilePicker<String>(
 
 ### 5. تأكيد وإدخال نص
 
-التطبيق المضيف يمرّر كل التسميات. الهاتف يعرض إلغاء في صف الإجراءات؛ الجهاز اللوحي يستخدم زر إغلاق الـ sheet.
+التطبيق المضيف يمرّر كل التسميات. الهاتف يعرض إلغاء في صف الإجراءات؛ الجهاز اللوحي يستخدم زر إغلاق الـ sheet. <span dir="ltr"><code>showSafaehConfirm</code></span> يعيد <span dir="ltr"><code>true</code></span> عند التأكيد، و<span dir="ltr"><code>false</code></span> عند إلغاء الهاتف، و<span dir="ltr"><code>null</code></span> عند الإغلاق (زر الإغلاق على الجهاز اللوحي أو الحاجز). اعتبر مؤكداً فقط عندما يكون <span dir="ltr"><code>ok == true</code></span>.
 
 ```dart
 final ok = await showSafaehConfirm(
@@ -370,7 +370,7 @@ await showSafaehCameraSheet<void>(
 
 ## جرد الـ UI
 
-**Sheets:** <span dir="ltr"><code>showSafaeh</code></span>، <span dir="ltr"><code>showSafaehPicker</code></span>، <span dir="ltr"><code>SafaehOption</code></span>، <span dir="ltr"><code>showSafaehTilePicker</code></span>، <span dir="ltr"><code>SafaehTileOption</code></span>، <span dir="ltr"><code>SafaehTilePickerBody</code></span>، <span dir="ltr"><code>showSafaehConfirm</code></span>، <span dir="ltr"><code>SafaehConfirmSheet</code></span>، <span dir="ltr"><code>showSafaehTextInput</code></span>، <span dir="ltr"><code>SafaehTextInputSheet</code></span>، <span dir="ltr"><code>buildSafaehSheetShell</code></span>، <span dir="ltr"><code>SafaehOptionList</code></span>، <span dir="ltr"><code>SafaehOptionTile</code></span>، <span dir="ltr"><code>kSheetContentPadding</code></span>
+**Sheets:** <span dir="ltr"><code>showSafaeh</code></span>، <span dir="ltr"><code>showSafaehPicker</code></span>، <span dir="ltr"><code>SafaehOption</code></span>، <span dir="ltr"><code>showSafaehTilePicker</code></span>، <span dir="ltr"><code>SafaehTileOption</code></span>، <span dir="ltr"><code>SafaehTilePickerBody</code></span>، <span dir="ltr"><code>SafaehTileBuilder</code></span>، <span dir="ltr"><code>showSafaehConfirm</code></span>، <span dir="ltr"><code>SafaehConfirmSheet</code></span>، <span dir="ltr"><code>showSafaehTextInput</code></span>، <span dir="ltr"><code>SafaehTextInputSheet</code></span>، <span dir="ltr"><code>buildSafaehSheetShell</code></span>، <span dir="ltr"><code>SafaehOptionList</code></span>، <span dir="ltr"><code>SafaehOptionTile</code></span>، <span dir="ltr"><code>kSheetContentPadding</code></span>، <span dir="ltr"><code>kSafaehSheetPadding</code></span>، <span dir="ltr"><code>SafaehTitleBuilder</code></span>، <span dir="ltr"><code>SafaehTransition</code></span>
 
 **Dialog:** <span dir="ltr"><code>showSafaehDialog</code></span>
 
@@ -419,7 +419,7 @@ await showSafaehCameraSheet<void>(
 
 ## المثال
 
-كتالوج بلا Riverpod في <span dir="ltr"><a href="example/"><code>example/</code></a></span> — نفس تقسيم <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span>: <span dir="ltr"><code>catalog.dart</code></span> (نصوص EN/AR)، <span dir="ltr"><code>app.dart</code></span>، وصفحة لكل API عام. تبديل لغة وسمة، بلا <span dir="ltr"><code>mobile_scanner</code></span>.
+كتالوج بلا Riverpod في <span dir="ltr"><a href="example/"><code>example/</code></a></span> — نفس تقسيم <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span>: <span dir="ltr"><code>catalog.dart</code></span> (نصوص EN/AR)، <span dir="ltr"><code>app.dart</code></span>، ومعرض عمودي لكل API عام. تبديل لغة وسمة، بلا <span dir="ltr"><code>mobile_scanner</code></span>.
 
 المثال على الويب: <span dir="ltr"><a href="https://zyzto.github.io/Safaeh/">zyzto.github.io/Safaeh</a></span>
 
@@ -445,7 +445,7 @@ dart analyze && flutter test
 
 ## Branding
 
-كلمة الشعار بخط <span dir="ltr"><strong><a href="https://www.1001fonts.com/baz-font.html">Baz</a></strong></span> (Baz Light) — نفس الـ typeface العربي في <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span> و<span dir="ltr"><a href="https://github.com/Zyzto/Siglat">Siglat</a></span>. ملف الـ SVG يضم <strong>صــفائح</strong> كـ outlines (تطويل بعد <em>ص</em>) حتى يظهر على GitHub دون تحميل الخط.
+كلمة الشعار بخط <span dir="ltr"><strong><a href="https://www.1001fonts.com/baz-font.html">Baz</a></strong></span> (Baz Light) — نفس الـ typeface العربي في <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span> و<span dir="ltr"><a href="https://github.com/Zyzto/Siglat">Siglat</a></span>. ملف الـ SVG يضم <strong>صــفائح</strong> كـ outlines (تطويل بعد <em>ص</em>) حتى يظهر على GitHub دون تحميل الخط. Baz ليس خطاً مسجَّلاً للحزمة، وملف الـ OTF غير مُرفق.
 
 </div>
 

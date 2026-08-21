@@ -73,7 +73,7 @@ class _SafaehTextInputSheetState extends State<SafaehTextInputSheet> {
         decoration: BoxDecoration(
           color: cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.45)),
+          border: Border.all(color: cs.outline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),

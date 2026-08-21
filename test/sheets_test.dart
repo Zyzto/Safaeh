@@ -43,6 +43,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('sheet-body'), findsOneWidget);
     expect(find.byKey(const ValueKey('safaeh_drag_handle')), findsOneWidget);
+    final handle = tester.widget<Container>(
+      find.descendant(
+        of: find.byKey(const ValueKey('safaeh_drag_handle')),
+        matching: find.byType(Container),
+      ),
+    );
+    final handleColor = (handle.decoration! as BoxDecoration).color!;
+    expect(handleColor.a, equals(1.0));
     expect(find.byIcon(Icons.close), findsNothing);
 
     tester.view.physicalSize = const Size(900, 800);
@@ -272,5 +280,281 @@ void main() {
     await tester.pump();
     expect(index, 1);
     expect(find.byIcon(Icons.settings), findsOneWidget);
+  });
+
+  testWidgets('phone confirm body ignores status-bar SafeArea', (tester) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(padding: const EdgeInsets.only(top: 47)),
+            child: child!,
+          );
+        },
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaehConfirm(
+              context: context,
+              title: 'Delete?',
+              content: 'Gone forever',
+              confirmLabel: 'Delete',
+              cancelLabel: 'Cancel',
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final panelTop = tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dy;
+    final titleTop = tester.getTopLeft(find.text('Delete?')).dy;
+    expect(titleTop - panelTop, lessThan(60));
+  });
+
+  testWidgets('confirm, text, and tile bodies ignore status-bar inset', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    const confirmKey = ValueKey('confirm-body');
+    const textKey = ValueKey('text-body');
+    const tileKey = ValueKey('tile-body');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(padding: const EdgeInsets.only(top: 47)),
+            child: child!,
+          );
+        },
+        home: const Scaffold(
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                KeyedSubtree(
+                  key: confirmKey,
+                  child: SafaehConfirmSheet(
+                    title: 'Delete?',
+                    content: 'Gone forever',
+                    confirmLabel: 'Delete',
+                    cancelLabel: 'Cancel',
+                  ),
+                ),
+                KeyedSubtree(
+                  key: textKey,
+                  child: SafaehTextInputSheet(
+                    title: 'Tag',
+                    doneLabel: 'Done',
+                    cancelLabel: 'Cancel',
+                  ),
+                ),
+                KeyedSubtree(
+                  key: tileKey,
+                  child: SafaehTilePickerBody<String>(
+                    title: 'Choose',
+                    tabletBreakpoint: 10000,
+                    options: [
+                      SafaehTileOption(value: 'a', label: 'Alpha'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    void expectNoStatusBarInset(Key host, Finder title) {
+      final hostTop = tester.getTopLeft(find.byKey(host)).dy;
+      final titleTop = tester.getTopLeft(title).dy;
+      expect(
+        titleTop - hostTop,
+        lessThan(40),
+        reason: '$title must not pick up MediaQuery.padding.top (47)',
+      );
+    }
+
+    expectNoStatusBarInset(confirmKey, find.text('Delete?'));
+    expectNoStatusBarInset(textKey, find.text('Tag'));
+    expectNoStatusBarInset(tileKey, find.text('Choose'));
+  });
+
+  testWidgets('railWidthOf shifts the tablet dialog off the start rail', (
+    tester,
+  ) async {
+    await setTablet(tester);
+    late double withoutRail;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              railWidthOf: (_) => 80,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final withRail = tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dx;
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              railWidthOf: (_) => 0,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    withoutRail = tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dx;
+    expect(withRail, closeTo(withoutRail + 40, 8));
+  });
+
+  testWidgets('railWidthOf in RTL shifts the tablet dialog off the start edge', (
+    tester,
+  ) async {
+    await setTablet(tester);
+    Future<double> openWithRail(double rail) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) {
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: child!,
+            );
+          },
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showSafaeh<void>(
+                context: context,
+                title: 'Rename',
+                railWidthOf: (_) => rail,
+                child: const Text('sheet-body'),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      return tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dx;
+    }
+
+    final withRail = await openWithRail(80);
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+    final withoutRail = await openWithRail(0);
+    // Start inset is on the right in RTL, so the panel's left edge moves left.
+    expect(withRail, closeTo(withoutRail - 40, 8));
+  });
+
+  testWidgets('phone sheet lists scroll; handle drag dismisses', (tester) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rows',
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (var i = 0; i < 20; i++)
+                    SizedBox(height: 48, child: Text('row-$i')),
+                ],
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+
+    await tester.drag(find.text('row-3'), const Offset(0, -120));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+
+    await tester.drag(find.text('row-5'), const Offset(0, 220));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+
+    await tester.drag(
+      find.byKey(const ValueKey('safaeh_drag_handle')),
+      const Offset(0, 220),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsNothing);
+  });
+
+  testWidgets('sheet actions remain keyboard-focusable', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: buildSafaehSheetShell(
+            title: const Text('Shell title'),
+            body: const Text('Shell body'),
+            actions: [
+              TextButton(onPressed: () {}, child: const Text('Cancel')),
+              FilledButton(onPressed: () {}, child: const Text('Save')),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final node = Focus.maybeOf(tester.element(find.text('Save')));
+    expect(node, isNotNull);
+    expect(node!.canRequestFocus, isTrue);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehConfirmSheet(
+            title: 'Delete?',
+            content: 'Gone forever',
+            confirmLabel: 'Delete',
+            cancelLabel: 'Cancel',
+          ),
+        ),
+      ),
+    );
+    final ink = tester.widget<InkWell>(
+      find.descendant(
+        of: find.byKey(const ValueKey('safaeh_confirm')),
+        matching: find.byType(InkWell),
+      ),
+    );
+    expect(ink.canRequestFocus, isTrue);
   });
 }

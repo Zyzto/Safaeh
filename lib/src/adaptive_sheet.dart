@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'sheet_handle_drag.dart';
@@ -180,7 +179,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: cs.outlineVariant.withValues(alpha: 0.45),
+                  color: cs.outline,
                 ),
               ),
             ),
@@ -231,7 +230,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
                           child: Icon(
                             Icons.close,
                             size: 22,
-                            color: cs.onSurfaceVariant,
+                            color: cs.onSurface,
                           ),
                         ),
                       ),
@@ -242,16 +241,18 @@ class _AdaptiveSheetHost extends StatelessWidget {
             ),
           )
         : showDragHandle
-        ? Padding(
-            key: const ValueKey('safaeh_drag_handle'),
-            padding: const EdgeInsets.only(top: 12, bottom: 8),
-            child: Center(
-              child: Container(
-                width: 32,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
+        ? _PhoneDragHandle(
+            child: Padding(
+              key: const ValueKey('safaeh_drag_handle'),
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              child: Center(
+                child: Container(
+                  width: 32,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cs.outline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
             ),
@@ -284,7 +285,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
     );
 
     final fill = cs.surfaceContainerLow;
-    final outline = cs.outlineVariant.withValues(alpha: 0.45);
+    final outline = cs.outline;
 
     final Widget panel = sheetShape != null
         ? Material(
@@ -517,21 +518,10 @@ class _PhoneSheetDragDismissState extends State<_PhoneSheetDragDismiss>
 
   @override
   Widget build(BuildContext context) {
-    return RawGestureDetector(
-      excludeFromSemantics: true,
-      gestures: <Type, GestureRecognizerFactory<GestureRecognizer>>{
-        VerticalDragGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<VerticalDragGestureRecognizer>(
-              () => VerticalDragGestureRecognizer(debugOwner: this),
-              (VerticalDragGestureRecognizer instance) {
-                instance
-                  ..onUpdate = _onDragUpdate
-                  ..onEnd = _onDragEnd
-                  ..onCancel = _onDragCancel
-                  ..onlyAcceptDragOnThreshold = true;
-              },
-            ),
-      },
+    return _PhoneSheetDragScope(
+      onUpdate: _onDragUpdate,
+      onEnd: _onDragEnd,
+      onCancel: _onDragCancel,
       child: ValueListenableBuilder<double>(
         valueListenable: _dy,
         builder: (context, dy, child) {
@@ -539,6 +529,48 @@ class _PhoneSheetDragDismissState extends State<_PhoneSheetDragDismiss>
         },
         child: widget.child,
       ),
+    );
+  }
+}
+
+class _PhoneSheetDragScope extends InheritedWidget {
+  const _PhoneSheetDragScope({
+    required this.onUpdate,
+    required this.onEnd,
+    required this.onCancel,
+    required super.child,
+  });
+
+  final GestureDragUpdateCallback onUpdate;
+  final GestureDragEndCallback onEnd;
+  final VoidCallback onCancel;
+
+  static _PhoneSheetDragScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<_PhoneSheetDragScope>();
+  }
+
+  @override
+  bool updateShouldNotify(_PhoneSheetDragScope oldWidget) =>
+      onUpdate != oldWidget.onUpdate ||
+      onEnd != oldWidget.onEnd ||
+      onCancel != oldWidget.onCancel;
+}
+
+class _PhoneDragHandle extends StatelessWidget {
+  const _PhoneDragHandle({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final drag = _PhoneSheetDragScope.maybeOf(context);
+    if (drag == null) return child;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragUpdate: drag.onUpdate,
+      onVerticalDragEnd: drag.onEnd,
+      onVerticalDragCancel: drag.onCancel,
+      child: child,
     );
   }
 }

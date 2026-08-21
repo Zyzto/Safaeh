@@ -55,7 +55,7 @@ class SafaehConfirmSheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.45)),
+          border: Border.all(color: cs.outline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -160,7 +160,6 @@ class _SafaehConfirmButton extends StatelessWidget {
       color: backgroundColor,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        canRequestFocus: false,
         onTap: onConfirm,
         borderRadius: BorderRadius.circular(14),
         child: Padding(

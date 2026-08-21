@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Tags are `vX.Y.Z` and must match `version:` in [`pubspec.yaml`](pubspec.yaml).
 See [VERSIONING.md](VERSIONING.md).
 
+## [Unreleased]
+
+### Fixed
+- Phone sheet bodies no longer apply status-bar `SafeArea` (`buildSafaehSheetShell`,
+  `SafaehTilePickerBody`).
+- Page-index active marker uses `BorderDirectional.start` in RTL.
+- Sidenav collapse chevron follows `TextDirection`.
+- Phone dismiss drag is limited to the sheet handle so lists can scroll.
+- Sheet actions and confirm can take keyboard focus.
+- `scrollToPageSection` honors `MediaQuery.disableAnimationsOf`.
+
+### Changed
+- Baz Light is no longer registered as a package font, and
+  `assets/fonts/baz-Light.otf` is not shipped (SVG outlines only).
+- `SafaehSidenavDestination` accepts optional `labelBuilder`.
+
+### Docs
+- Confirm result (`true` / `false` / `null`) is spelled out in both READMEs.
+
 ## [0.1.0] - 2026-08-21
 
 First standalone release (extracted from Hisab). Host apps keep i18n,

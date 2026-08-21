@@ -591,4 +591,75 @@ void main() {
     final cs = Theme.of(tester.element(find.text('Danger'))).colorScheme;
     expect(ink.data.color, cs.error);
   });
+
+  testWidgets('sidenav collapse chevron mirrors in RTL', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            body: Row(
+              children: [
+                SafaehSidenav(
+                  title: 'Safaeh',
+                  collapsed: false,
+                  onToggleCompact: _noop,
+                  selectedIndex: 0,
+                  onDestinationSelected: _noopIndex,
+                  destinations: [
+                    SafaehSidenavDestination(
+                      label: 'Groups',
+                      icon: Icons.group_outlined,
+                      selectedIcon: Icons.group,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_left), findsNothing);
+  });
+
+  testWidgets('sidenav destination labelBuilder is used', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehSidenav(
+            asDrawer: true,
+            title: 'Menu',
+            selectedIndex: 0,
+            onDestinationSelected: (_) {},
+            destinations: [
+              SafaehSidenavDestination(
+                label: 'Groups',
+                icon: Icons.group_outlined,
+                selectedIcon: Icons.group,
+                labelBuilder: (data, style) => Text(
+                  'built-$data',
+                  style: style,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('built-Groups'), findsOneWidget);
+    expect(find.text('Groups'), findsNothing);
+  });
 }
+
+void _noop() {}
+
+void _noopIndex(int index) {}

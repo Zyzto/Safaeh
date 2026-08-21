@@ -9,12 +9,14 @@ class SafaehSidenavDestination {
     required this.icon,
     required this.selectedIcon,
     this.tileKey,
+    this.labelBuilder,
   });
 
   final String label;
   final IconData icon;
   final IconData selectedIcon;
   final Key? tileKey;
+  final Widget Function(String data, TextStyle? style)? labelBuilder;
 }
 
 /// Profile / account row at the bottom of [SafaehSidenav].
@@ -121,6 +123,7 @@ class SafaehSidenav extends StatelessWidget {
               collapsed: !asDrawer && collapsed,
               fill: chrome.fill,
               onFill: chrome.onFill,
+              labelBuilder: destinations[i].labelBuilder,
               onTap: () => onDestinationSelected(i),
             ),
           const Spacer(),
@@ -227,7 +230,13 @@ class _Header extends StatelessWidget {
                 tooltip: collapsed ? expandTooltip : collapseTooltip,
                 color: onFill,
                 onPressed: onToggleCompact,
-                icon: Icon(collapsed ? Icons.menu : Icons.chevron_left),
+                icon: Icon(
+                  collapsed
+                      ? Icons.menu
+                      : Directionality.of(context) == TextDirection.rtl
+                      ? Icons.chevron_right
+                      : Icons.chevron_left,
+                ),
               ),
             ),
           ),

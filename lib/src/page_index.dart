@@ -217,7 +217,7 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(
-                              color: cs.outlineVariant.withValues(alpha: 0.55),
+                              color: cs.outline,
                             ),
                           ),
                           child: Row(
@@ -258,7 +258,8 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
-                                            color: cs.onSurfaceVariant,
+                                            color: cs.onSurface,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                     ),
                                   ],
@@ -309,7 +310,7 @@ class _PopoverPanel extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(color: cs.outline),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
@@ -379,15 +380,13 @@ class _IndexLink extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              border: Border(
-                left: BorderSide(
+              border: BorderDirectional(
+                start: BorderSide(
                   width: 2.5,
                   color: selected ? cs.primary : Colors.transparent,
                 ),
               ),
-              color: selected
-                  ? cs.primaryContainer.withValues(alpha: 0.45)
-                  : null,
+              color: selected ? cs.primaryContainer : null,
             ),
             child: Row(
               children: [
@@ -431,9 +430,10 @@ Future<void> scrollToPageSection(
   Future<bool> ensure() async {
     final ctx = key.currentContext;
     if (ctx == null) return false;
+    final motion = safaehResolvedMotion(ctx, ensureDuration);
     await Scrollable.ensureVisible(
       ctx,
-      duration: ensureDuration,
+      duration: motion,
       curve: Curves.easeOutCubic,
       alignment: alignment,
     );

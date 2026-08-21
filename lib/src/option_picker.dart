@@ -116,7 +116,7 @@ class _OptionPickerBody<T> extends StatelessWidget {
               Text(
                 footer!,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
                   height: 1.3,
                 ),
               ),
@@ -147,9 +147,7 @@ class _OptionCard<T> extends StatelessWidget {
     return Opacity(
       opacity: enabled ? 1 : 0.5,
       child: Material(
-        color: selected
-            ? cs.primaryContainer.withValues(alpha: 0.35)
-            : cs.surfaceContainerHighest.withValues(alpha: 0.35),
+        color: selected ? cs.primaryContainer : cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -157,11 +155,7 @@ class _OptionCard<T> extends StatelessWidget {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected
-                    ? cs.primary.withValues(alpha: 0.45)
-                    : cs.outlineVariant.withValues(alpha: 0.4),
-              ),
+              border: Border.all(color: selected ? cs.primary : cs.outline),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -171,7 +165,7 @@ class _OptionCard<T> extends StatelessWidget {
                   Icon(
                     option.icon,
                     size: 20,
-                    color: selected ? cs.primary : cs.onSurfaceVariant,
+                    color: selected ? cs.onPrimaryContainer : cs.onSurface,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -182,13 +176,18 @@ class _OptionCard<T> extends StatelessWidget {
                           option.label,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
+                            color: selected
+                                ? cs.onPrimaryContainer
+                                : cs.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           option.subtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
+                            color: selected
+                                ? cs.onPrimaryContainer
+                                : cs.onSurfaceVariant,
                             height: 1.25,
                           ),
                         ),
@@ -223,7 +222,7 @@ class _OptionCard<T> extends StatelessWidget {
                   if (selected)
                     Icon(
                       Icons.check_circle_rounded,
-                      color: cs.primary,
+                      color: cs.onPrimaryContainer,
                       size: 18,
                     ),
                 ],

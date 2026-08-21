@@ -31,8 +31,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family: Baz
-      fonts:
-        - asset: assets/fonts/baz-Light.otf
-          weight: 300

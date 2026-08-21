@@ -2,9 +2,10 @@
 const catalogTranslations = <String, Map<String, String>>{
   'en': {
     'app_title': 'Safaeh',
-    'language_toggle': 'AR',
-    'theme_toggle': 'Dark',
-    'theme_toggle_light': 'Light',
+    'language': 'Language',
+    'theme': 'Theme',
+    'theme_light': 'Light',
+    'theme_dark': 'Dark',
     'sheet': 'Adaptive sheet',
     'sheet_sub': 'Phone sheet ↔ tablet dialog',
     'picker': 'Card picker',
@@ -100,9 +101,10 @@ const catalogTranslations = <String, Map<String, String>>{
   },
   'ar': {
     'app_title': 'صفائح',
-    'language_toggle': 'EN',
-    'theme_toggle': 'داكن',
-    'theme_toggle_light': 'فاتح',
+    'language': 'اللغة',
+    'theme': 'المظهر',
+    'theme_light': 'فاتح',
+    'theme_dark': 'داكن',
     'sheet': 'ورقة متكيفة',
     'sheet_sub': 'ورقة هاتف ↔ حوار لوحي',
     'picker': 'منتقي البطاقات',
