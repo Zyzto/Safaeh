@@ -1,0 +1,38 @@
+name: safaeh
+description: Adaptive sheets, dialogs, camera/QR chrome, page index, and sidenav for Flutter.
+publish_to: 'none'
+version: 0.1.0
+homepage: https://github.com/Zyzto/Safaeh
+repository: https://github.com/Zyzto/Safaeh
+issue_tracker: https://github.com/Zyzto/Safaeh/issues
+license: MPL-2.0
+screenshots:
+  - description: Catalog in English
+    path: screenshots/catalog-en.png
+  - description: Catalog in Arabic (RTL)
+    path: screenshots/catalog-ar.png
+  - description: Card picker
+    path: screenshots/picker-en.png
+  - description: Dark catalog
+    path: screenshots/catalog-en-dark.png
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.11.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Baz
+      fonts:
+        - asset: assets/fonts/baz-Light.otf
+          weight: 300

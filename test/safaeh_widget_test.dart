@@ -1,0 +1,594 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:safaeh/safaeh.dart';
+
+void main() {
+  testWidgets('picker shows padding and options', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showSafaehPicker<int>(
+                context: context,
+                title: 'How to settle',
+                selected: 1,
+                footer: 'Footer copy',
+                options: const [
+                  SafaehOption(
+                    value: 1,
+                    label: 'Minimal',
+                    subtitle: 'Fewest transfers',
+                    icon: Icons.bolt_outlined,
+                    badge: 'Live',
+                  ),
+                  SafaehOption(
+                    value: 2,
+                    label: 'Pairs',
+                    subtitle: 'Per pair',
+                    icon: Icons.people_outline,
+                  ),
+                ],
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+    expect(find.text('How to settle'), findsWidgets);
+    expect(find.text('Minimal'), findsOneWidget);
+    expect(find.text('Live'), findsOneWidget);
+    expect(find.text('Footer copy'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(900, 800);
+    await tester.pumpAndSettle();
+    // Header title only — in-body title must hide when crossing 600.
+    expect(find.text('How to settle'), findsOneWidget);
+  });
+
+  testWidgets('expanding a collapsed rail does not overflow tiles', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var collapsed = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  SafaehSidenav(
+                    title: 'Hisab',
+                    collapsed: collapsed,
+                    onToggleCompact: () =>
+                        setState(() => collapsed = !collapsed),
+                    selectedIndex: 0,
+                    onDestinationSelected: (_) {},
+                    destinations: const [
+                      SafaehSidenavDestination(
+                        label: 'Groups',
+                        icon: Icons.group_outlined,
+                        selectedIcon: Icons.group,
+                      ),
+                    ],
+                    profile: SafaehSidenavProfile(
+                      label: 'Ada Lovelace',
+                      subtitle: 'ada@example.com',
+                      trailing: const Icon(Icons.chevron_right, size: 22),
+                      onTap: () {},
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('safaeh_nav_expand')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('confirm sheet phone cancel pops false and confirm pops true', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    bool? first;
+    bool? second;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Column(
+            children: [
+              TextButton(
+                onPressed: () async {
+                  first = await showSafaehConfirm(
+                    context: context,
+                    title: 'Delete?',
+                    content: 'Gone forever',
+                    confirmLabel: 'Delete',
+                    cancelLabel: 'Cancel',
+                    isDestructive: true,
+                  );
+                },
+                child: const Text('open-cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  second = await showSafaehConfirm(
+                    context: context,
+                    title: 'Delete?',
+                    content: 'Gone forever',
+                    confirmLabel: 'Delete',
+                    cancelLabel: 'Cancel',
+                  );
+                },
+                child: const Text('open-confirm'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open-cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cancel'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('safaeh_cancel')));
+    await tester.pumpAndSettle();
+    expect(first, isFalse);
+
+    await tester.tap(find.text('open-confirm'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('safaeh_confirm')));
+    await tester.pumpAndSettle();
+    expect(second, isTrue);
+  });
+
+  testWidgets('text input returns trimmed value', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? value;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              value = await showSafaehTextInput(
+                context: context,
+                title: 'Tag',
+                doneLabel: 'Done',
+                initialValue: '  hello  ',
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('safaeh_text_done')));
+    await tester.pumpAndSettle();
+    expect(value, 'hello');
+  });
+
+  testWidgets('option tile selected and disabled', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              SafaehOptionTile(
+                title: const Text('Selected'),
+                selected: true,
+                onTap: () => taps++,
+              ),
+              SafaehOptionTile(
+                title: const Text('Disabled'),
+                enabled: false,
+                onTap: () => taps++,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final selected = tester.widget<Material>(
+      find
+          .ancestor(of: find.text('Selected'), matching: find.byType(Material))
+          .first,
+    );
+    final cs = Theme.of(tester.element(find.text('Selected'))).colorScheme;
+    expect(selected.color, cs.primaryContainer);
+
+    await tester.tap(find.text('Disabled'));
+    await tester.pump();
+    expect(taps, 0);
+
+    await tester.tap(find.text('Selected'));
+    await tester.pump();
+    expect(taps, 1);
+  });
+
+  testWidgets('dialog scrim dismiss pops null', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    Object? result = 'pending';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              result = await showSafaehDialog<String>(
+                context: context,
+                builder: (ctx) => const Material(
+                  child: SizedBox(
+                    width: 200,
+                    height: 120,
+                    child: Center(child: Text('dialog-body')),
+                  ),
+                ),
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('dialog-body'), findsOneWidget);
+
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(find.text('dialog-body'), findsNothing);
+    expect(result, isNull);
+  });
+
+  testWidgets('floating nav tap selects destination', (tester) async {
+    var selected = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) {
+              return SafaehFloatingNavBar(
+                selectedIndex: selected,
+                onDestinationSelected: (i) => setState(() => selected = i),
+                destinations: const [
+                  SafaehSidenavDestination(
+                    label: 'Home',
+                    icon: Icons.home_outlined,
+                    selectedIcon: Icons.home,
+                  ),
+                  SafaehSidenavDestination(
+                    label: 'Settings',
+                    icon: Icons.settings_outlined,
+                    selectedIcon: Icons.settings,
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.home), findsOneWidget);
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.settings), findsOneWidget);
+    expect(selected, 1);
+  });
+
+  testWidgets('content band hides aside when narrow', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehContentBand(
+            aside: Text('aside-rail'),
+            child: Text('band-body'),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('band-body'), findsOneWidget);
+    expect(find.text('aside-rail'), findsNothing);
+  });
+
+  test('SafaehThemeData.copyWith replaces every field', () {
+    const original = SafaehThemeData();
+    final copy = original.copyWith(
+      tabletBreakpoint: 700,
+      dialogMaxWidth: 480,
+      motion: const Duration(milliseconds: 100),
+      enterCurve: Curves.linear,
+      radius: 8,
+      compactNavWidth: 64,
+      expandedNavWidth: 200,
+      navMotion: const Duration(milliseconds: 90),
+      pageIndexMotion: const Duration(milliseconds: 80),
+      sheetRoll: const Duration(milliseconds: 70),
+      sheetRollEnter: Curves.easeIn,
+      exitCurve: Curves.linear,
+      cameraCompactHeightFraction: 0.5,
+      contentMaxWidth: 640,
+    );
+    expect(copy.tabletBreakpoint, 700);
+    expect(copy.dialogMaxWidth, 480);
+    expect(copy.motion, const Duration(milliseconds: 100));
+    expect(copy.enterCurve, Curves.linear);
+    expect(copy.radius, 8);
+    expect(copy.compactNavWidth, 64);
+    expect(copy.expandedNavWidth, 200);
+    expect(copy.navMotion, const Duration(milliseconds: 90));
+    expect(copy.pageIndexMotion, const Duration(milliseconds: 80));
+    expect(copy.sheetRoll, const Duration(milliseconds: 70));
+    expect(copy.sheetRollEnter, Curves.easeIn);
+    expect(copy.exitCurve, Curves.linear);
+    expect(copy.cameraCompactHeightFraction, 0.5);
+    expect(copy.contentMaxWidth, 640);
+    expect(original.copyWith(), original);
+  });
+
+  testWidgets('showSafaeh morphs phone handle to tablet header', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              child: const Padding(
+                padding: kSheetContentPadding,
+                child: Text('sheet-body'),
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('safaeh_drag_handle')), findsOneWidget);
+    expect(find.byIcon(Icons.close), findsNothing);
+    expect(find.text('sheet-body'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(900, 800);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('safaeh_drag_handle')), findsNothing);
+    expect(find.byIcon(Icons.close), findsOneWidget);
+    expect(find.text('Rename'), findsOneWidget);
+    expect(find.text('sheet-body'), findsOneWidget);
+  });
+
+  testWidgets('tile picker header, disabled row, and morph', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? chosen;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              chosen = await showSafaehTilePicker<String>(
+                context: context,
+                title: 'Import',
+                header: const Text('Preview counts'),
+                selected: 'add',
+                options: const [
+                  SafaehTileOption(
+                    value: 'add',
+                    label: 'Add copies',
+                    subtitle: 'Keeps existing',
+                    leading: Icon(Icons.add),
+                  ),
+                  SafaehTileOption(
+                    value: 'replace',
+                    label: 'Replace',
+                    enabled: false,
+                  ),
+                ],
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Import'), findsWidgets);
+    expect(find.text('Preview counts'), findsOneWidget);
+    expect(find.text('Keeps existing'), findsOneWidget);
+
+    await tester.tap(find.text('Replace'));
+    await tester.pumpAndSettle();
+    expect(chosen, isNull);
+    expect(find.text('Replace'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(900, 800);
+    await tester.pumpAndSettle();
+    expect(find.text('Import'), findsOneWidget);
+
+    await tester.tap(find.text('Add copies'));
+    await tester.pumpAndSettle();
+    expect(chosen, 'add');
+  });
+
+  testWidgets('card picker honors enabled', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    int? chosen;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              chosen = await showSafaehPicker<int>(
+                context: context,
+                title: 'How to settle',
+                selected: 1,
+                options: const [
+                  SafaehOption(
+                    value: 1,
+                    label: 'Minimal',
+                    subtitle: 'Fewest transfers',
+                    icon: Icons.bolt_outlined,
+                  ),
+                  SafaehOption(
+                    value: 2,
+                    label: 'Locked',
+                    subtitle: 'Unavailable',
+                    icon: Icons.lock_outline,
+                    enabled: false,
+                  ),
+                ],
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Locked'));
+    await tester.pumpAndSettle();
+    expect(chosen, isNull);
+    expect(find.text('Locked'), findsOneWidget);
+  });
+
+  testWidgets('buildSafaehSheetShell shows title, body, and actions', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: buildSafaehSheetShell(
+            title: const Text('Shell title'),
+            body: const Text('Shell body'),
+            actions: [TextButton(onPressed: () {}, child: const Text('OK'))],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Shell title'), findsOneWidget);
+    expect(find.text('Shell body'), findsOneWidget);
+    expect(find.text('OK'), findsOneWidget);
+  });
+
+  testWidgets('sidenav asDrawer shows title without expand control', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehSidenav(
+            asDrawer: true,
+            title: 'Menu',
+            selectedIndex: 0,
+            onDestinationSelected: (_) {},
+            destinations: const [
+              SafaehSidenavDestination(
+                label: 'Groups',
+                icon: Icons.group_outlined,
+                selectedIcon: Icons.group,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Menu'), findsOneWidget);
+    expect(find.text('Groups'), findsOneWidget);
+    expect(find.byKey(const ValueKey('safaeh_nav_rail')), findsNothing);
+    expect(find.byKey(const ValueKey('safaeh_nav_expand')), findsNothing);
+  });
+
+  testWidgets('option tile destructive uses error color', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehOptionTile(
+            title: const Text('Danger'),
+            destructive: true,
+            onTap: () {},
+          ),
+        ),
+      ),
+    );
+
+    final ink = tester.widget<IconTheme>(
+      find
+          .ancestor(of: find.text('Danger'), matching: find.byType(IconTheme))
+          .first,
+    );
+    final cs = Theme.of(tester.element(find.text('Danger'))).colorScheme;
+    expect(ink.data.color, cs.error);
+  });
+}

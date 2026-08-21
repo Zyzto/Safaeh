@@ -1,0 +1,113 @@
+import 'package:flutter/material.dart';
+
+/// Bordered ink row for sheet action / picker lists.
+///
+/// Defaults use [ColorScheme] only. Hosts that need a brand accent can pass
+/// [selectedFill] / [selectedBorder].
+class SafaehOptionTile extends StatelessWidget {
+  const SafaehOptionTile({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.leading,
+    this.trailing,
+    this.onTap,
+    this.selected = false,
+    this.destructive = false,
+    this.enabled = true,
+    this.selectedFill,
+    this.selectedBorder,
+  });
+
+  final Widget title;
+  final Widget? subtitle;
+  final Widget? leading;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final bool selected;
+  final bool destructive;
+  final bool enabled;
+  final Color? selectedFill;
+  final Color? selectedBorder;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final onTapEnabled = enabled ? onTap : null;
+    final titleColor = destructive
+        ? cs.error
+        : (enabled ? cs.onSurface : cs.onSurface.withValues(alpha: 0.38));
+    final subtitleColor = destructive
+        ? cs.error.withValues(alpha: 0.8)
+        : cs.onSurfaceVariant;
+    final fill = selected
+        ? (selectedFill ?? cs.primaryContainer)
+        : cs.surfaceContainerLow;
+    final border = selected
+        ? (selectedBorder ?? cs.primary)
+        : cs.outlineVariant.withValues(alpha: 0.45);
+
+    return Material(
+      color: fill,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        canRequestFocus: false,
+        onTap: onTapEnabled,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: border),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: DefaultTextStyle.merge(
+              style: theme.textTheme.bodyLarge!.copyWith(
+                color: titleColor,
+                fontWeight: FontWeight.w600,
+              ),
+              child: IconTheme.merge(
+                data: IconThemeData(color: titleColor),
+                child: Row(
+                  children: [
+                    if (leading != null) ...[
+                      SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: Center(child: leading!),
+                      ),
+                      const SizedBox(width: 14),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          title,
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            DefaultTextStyle.merge(
+                              style: theme.textTheme.bodySmall!.copyWith(
+                                color: subtitleColor,
+                              ),
+                              child: subtitle!,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (trailing != null) ...[
+                      const SizedBox(width: 10),
+                      trailing!,
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

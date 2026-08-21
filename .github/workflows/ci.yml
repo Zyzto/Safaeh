@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.41.5"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  analyze-and-test:
+    name: Analyze & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Check version format
+        run: bash ./scripts/check_version.sh
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Test
+        run: flutter test --coverage
+
+      - name: Analyze example
+        run: |
+          cd example
+          flutter pub get
+          dart analyze --fatal-infos
+
+      - name: Test example
+        run: |
+          cd example
+          flutter test
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: ignore

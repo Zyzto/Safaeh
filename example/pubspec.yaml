@@ -1,0 +1,24 @@
+name: safaeh_example
+description: Catalog of package:safaeh sheets, nav, and camera chrome.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  safaeh:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
