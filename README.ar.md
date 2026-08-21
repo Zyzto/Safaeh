@@ -28,6 +28,7 @@
   <a href="#ماذا-تقدّم">Features</a> ·
   <a href="#ماذا-يبقى-في-التطبيق">Host app</a> ·
   <a href="#المثال">Example</a> ·
+  <a href="https://zyzto.github.io/Safaeh/">المثال الحي</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="VERSIONING.md">Versioning</a> ·
   <a href="docs/host-integration.md">Host integration</a>
@@ -419,6 +420,8 @@ await showSafaehCameraSheet<void>(
 ## المثال
 
 كتالوج بلا Riverpod في <span dir="ltr"><a href="example/"><code>example/</code></a></span> — نفس تقسيم <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span>: <span dir="ltr"><code>catalog.dart</code></span> (نصوص EN/AR)، <span dir="ltr"><code>app.dart</code></span>، وصفحة لكل API عام. تبديل لغة وسمة، بلا <span dir="ltr"><code>mobile_scanner</code></span>.
+
+المثال على الويب: <span dir="ltr"><a href="https://zyzto.github.io/Safaeh/">zyzto.github.io/Safaeh</a></span>
 
 ```bash
 cd example && dart analyze && flutter test

@@ -4,8 +4,10 @@ Bilingual catalog of `package:safaeh` chrome (`example/lib/app.dart`,
 `catalog.dart`, `pages.dart`). EN/AR + light/dark toggles. No
 `mobile_scanner`, Riverpod, or `easy_localization`.
 
-No platform folders are generated. `flutter run` on a device needs
-`flutter create .` first.
+Live: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
+
+`web/` is in-tree for GitHub Pages. Other platforms are not generated, so
+`flutter run` on a device needs `flutter create .` first.
 
 ## Analyze & test
 
@@ -18,6 +20,14 @@ flutter test
 
 `test/screenshots_test.dart` writes PNGs to [`../screenshots/`](../screenshots/)
 for the package READMEs.
+
+## Web
+
+```bash
+cd example
+flutter pub get
+flutter build web --release --base-href /Safaeh/
+```
 
 ## Run on a device (optional)
 

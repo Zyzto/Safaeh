@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.41.5"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  verify:
+    name: Verify tag & tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Tag must match pubspec version
+        run: bash ./scripts/check_version.sh --expect-tag "${GITHUB_REF_NAME}"
+
+      - name: CHANGELOG must document this version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          grep -qE "^## \[${version}\]" CHANGELOG.md
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Test
+        run: flutter test
+
+  github-release:
+    name: GitHub Release
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Extract changelog section
+        id: notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # Extract ## [version] … until next ## heading
+          awk -v ver="$version" '
+            $0 ~ "^## \\[" ver "\\]" {capture=1; next}
+            capture && /^## / {exit}
+            capture {print}
+          ' CHANGELOG.md > /tmp/notes.md
+          if [[ ! -s /tmp/notes.md ]]; then
+            echo "Release ${GITHUB_REF_NAME}" > /tmp/notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: /tmp/notes.md
+          generate_release_notes: true

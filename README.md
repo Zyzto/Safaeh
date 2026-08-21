@@ -26,6 +26,7 @@
   <a href="#features-at-a-glance">Features</a> ·
   <a href="#what-stays-in-the-host">Host app</a> ·
   <a href="#example">Example</a> ·
+  <a href="https://zyzto.github.io/Safaeh/">Live demo</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="VERSIONING.md">Versioning</a> ·
   <a href="docs/host-integration.md">Host integration</a> ·
@@ -376,6 +377,8 @@ A Riverpod-free catalog lives in [`example/`](example/) — same split as
 [Edadat](https://github.com/Zyzto/Edadat): `catalog.dart` (EN/AR copy),
 `app.dart` (theme + home), and a page per public API. Language and theme
 toggles, no `mobile_scanner`.
+
+Live web build: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
 
 ```bash
 cd example && dart analyze && flutter test
