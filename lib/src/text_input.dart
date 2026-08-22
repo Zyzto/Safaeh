@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'adaptive_sheet.dart';
 import 'sheet_shell.dart';
@@ -15,9 +16,16 @@ class SafaehTextInputSheet extends StatefulWidget {
     this.maxLines = 1,
     this.maxLength,
     this.obscureText = false,
+    this.keyboardType,
+    this.textInputAction,
+    this.inputFormatters,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.onChanged,
     this.cancelLabel,
     this.titleBuilder,
     this.tabletBreakpoint,
+    this.autofocus = true,
   });
 
   final String title;
@@ -27,9 +35,16 @@ class SafaehTextInputSheet extends StatefulWidget {
   final int maxLines;
   final int? maxLength;
   final bool obscureText;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool autocorrect;
+  final bool enableSuggestions;
+  final ValueChanged<String>? onChanged;
   final String? cancelLabel;
   final SafaehTitleBuilder? titleBuilder;
   final double? tabletBreakpoint;
+  final bool autofocus;
 
   @override
   State<SafaehTextInputSheet> createState() => _SafaehTextInputSheetState();
@@ -45,10 +60,20 @@ class _SafaehTextInputSheetState extends State<SafaehTextInputSheet> {
   }
 
   @override
+  void didUpdateWidget(covariant SafaehTextInputSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue) {
+      _controller.text = widget.initialValue;
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
+  void _submit() => safaehPop(context, _controller.text.trim());
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +97,7 @@ class _SafaehTextInputSheetState extends State<SafaehTextInputSheet> {
       body: DecoratedBox(
         decoration: BoxDecoration(
           color: cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(tokens.radius),
           border: Border.all(color: cs.outline),
         ),
         child: Padding(
@@ -80,15 +105,23 @@ class _SafaehTextInputSheetState extends State<SafaehTextInputSheet> {
           child: TextField(
             controller: _controller,
             obscureText: widget.obscureText,
+            keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            inputFormatters: widget.inputFormatters,
+            autocorrect: widget.obscureText ? false : widget.autocorrect,
+            enableSuggestions: widget.obscureText
+                ? false
+                : widget.enableSuggestions,
             decoration: InputDecoration(
               hintText: widget.hint,
               border: const OutlineInputBorder(),
-              counterText: widget.maxLength != null ? '' : null,
               isDense: true,
             ),
-            maxLines: widget.maxLines,
+            maxLines: widget.obscureText ? 1 : widget.maxLines,
             maxLength: widget.maxLength,
-            autofocus: true,
+            autofocus: widget.autofocus,
+            onChanged: widget.onChanged,
+            onSubmitted: (_) => _submit(),
           ),
         ),
       ),
@@ -96,18 +129,12 @@ class _SafaehTextInputSheetState extends State<SafaehTextInputSheet> {
         if (!isWide)
           TextButton(
             key: const ValueKey('safaeh_cancel'),
-            onPressed: () {
-              final navigator = Navigator.of(context, rootNavigator: true);
-              if (navigator.canPop()) navigator.pop(null);
-            },
+            onPressed: () => safaehPop<String?>(context),
             child: Text(resolvedCancel),
           ),
         FilledButton(
           key: const ValueKey('safaeh_text_done'),
-          onPressed: () {
-            final navigator = Navigator.of(context, rootNavigator: true);
-            if (navigator.canPop()) navigator.pop(_controller.text.trim());
-          },
+          onPressed: _submit,
           child: Text(widget.doneLabel),
         ),
       ],
@@ -127,28 +154,46 @@ Future<String?> showSafaehTextInput({
   int maxLines = 1,
   int? maxLength,
   bool obscureText = false,
+  TextInputType? keyboardType,
+  TextInputAction? textInputAction,
+  List<TextInputFormatter>? inputFormatters,
+  bool autocorrect = true,
+  bool enableSuggestions = true,
+  ValueChanged<String>? onChanged,
   String? cancelLabel,
   SafaehTitleBuilder? titleBuilder,
   double Function(BuildContext context)? railWidthOf,
   SafaehTransition? fadeScale,
   SafaehTransition? slideUp,
+  SafaehPhoneSheetPlacement phonePlacement = SafaehPhoneSheetPlacement.bottom,
   double? tabletBreakpoint,
   Duration? motion,
   Curve? enterCurve,
+  Curve? exitCurve,
+  double? maxWidth,
   double? maxHeight,
+  bool barrierDismissible = true,
+  bool useRootNavigator = true,
+  SafaehRouteOptions? route,
 }) {
-  final height = maxHeight ?? MediaQuery.sizeOf(context).height * 0.5;
   return showSafaeh<String?>(
     context: context,
     title: title,
     titleBuilder: titleBuilder,
-    maxHeight: height,
+    maxWidth: maxWidth,
+    maxHeight: maxHeight,
+    barrierDismissible: barrierDismissible,
     tabletBreakpoint: tabletBreakpoint,
     motion: motion,
     enterCurve: enterCurve,
+    exitCurve: exitCurve,
     railWidthOf: railWidthOf,
     fadeScale: fadeScale,
     slideUp: slideUp,
+    phonePlacement: phonePlacement,
+    useRootNavigator: useRootNavigator,
+    paintPhoneTitle: false,
+    route: route,
     child: SafaehTextInputSheet(
       title: title,
       doneLabel: doneLabel,
@@ -157,6 +202,12 @@ Future<String?> showSafaehTextInput({
       maxLines: maxLines,
       maxLength: maxLength,
       obscureText: obscureText,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      inputFormatters: inputFormatters,
+      autocorrect: autocorrect,
+      enableSuggestions: enableSuggestions,
+      onChanged: onChanged,
       cancelLabel: cancelLabel,
       titleBuilder: titleBuilder,
       tabletBreakpoint: tabletBreakpoint,

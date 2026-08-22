@@ -75,6 +75,11 @@ class SheetHandleBar extends StatelessWidget {
     required this.onVerticalDragCancel,
     this.duration,
     this.curve = Curves.easeOutCubic,
+    this.semanticLabel,
+    this.expandLabel,
+    this.collapseLabel,
+    this.dismissLabel,
+    this.onTap,
   });
 
   final bool expanded;
@@ -83,6 +88,19 @@ class SheetHandleBar extends StatelessWidget {
   final VoidCallback onVerticalDragCancel;
   final Duration? duration;
   final Curve curve;
+
+  /// Wins over the per-mode labels.
+  final String? semanticLabel;
+
+  /// Compact handle. Falls back to [dismissLabel], then Material “Dismiss”.
+  final String? expandLabel;
+
+  /// Expanded handle. Falls back to [dismissLabel], then Material “Dismiss”.
+  final String? collapseLabel;
+
+  /// Override for the Material dismiss fallback (tap still dismisses).
+  final String? dismissLabel;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -100,20 +118,39 @@ class SheetHandleBar extends StatelessWidget {
         duration: motion,
         curve: curve,
         alignment: Alignment.topCenter,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onVerticalDragUpdate: onVerticalDragUpdate,
-          onVerticalDragEnd: onVerticalDragEnd,
-          onVerticalDragCancel: onVerticalDragCancel,
-          child: Padding(
-            padding: EdgeInsets.only(top: topPad, bottom: expanded ? 8 : 6),
-            child: Center(
-              child: Container(
-                width: 44,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(2.5),
+        child: Semantics(
+          container: true,
+          button: onTap != null,
+          onTap: onTap,
+          label: semanticLabel ??
+              (onTap == null
+                  ? (expanded ? collapseLabel : expandLabel)
+                  : (expanded
+                      ? (collapseLabel ??
+                          dismissLabel ??
+                          MaterialLocalizations.of(
+                            context,
+                          ).modalBarrierDismissLabel)
+                      : (expandLabel ??
+                          dismissLabel ??
+                          MaterialLocalizations.of(
+                            context,
+                          ).modalBarrierDismissLabel))),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onVerticalDragUpdate: onVerticalDragUpdate,
+            onVerticalDragEnd: onVerticalDragEnd,
+            onVerticalDragCancel: onVerticalDragCancel,
+            child: Padding(
+              padding: EdgeInsets.only(top: topPad, bottom: expanded ? 8 : 6),
+              child: Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(2.5),
+                  ),
                 ),
               ),
             ),

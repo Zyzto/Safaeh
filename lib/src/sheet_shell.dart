@@ -41,14 +41,12 @@ Widget buildSafaehSheetShell({
               const SizedBox(height: _kBodyActionsGap),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: padding),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    for (int i = 0; i < actions.length; i++) ...[
-                      if (i > 0) const SizedBox(width: _kActionsSpacing),
-                      actions[i],
-                    ],
-                  ],
+                child: OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  spacing: _kActionsSpacing,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  overflowSpacing: _kActionsSpacing,
+                  children: actions,
                 ),
               ),
             ],

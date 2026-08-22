@@ -52,4 +52,4 @@ fi
 
 git tag -a "$tag" -m "Release $tag"
 git push origin "$tag"
-echo "Pushed $tag — GitHub Actions release workflow should verify and create a GitHub Release."
+echo "Pushed $tag — GitHub Actions release workflow should verify, create a GitHub Release, and publish to pub.dev."

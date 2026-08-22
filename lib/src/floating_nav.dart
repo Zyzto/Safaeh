@@ -44,9 +44,10 @@ class SafaehFloatingNavBar extends StatelessWidget {
     final active = activeColor ?? cs.primary;
     final inactive = inactiveColor ?? cs.onSurfaceVariant;
     final background = backgroundColor ?? cs.surfaceContainerHighest;
+    final tokens = SafaehTheme.of(context);
     final tabMotion = safaehResolvedMotion(
       context,
-      motion ?? const Duration(milliseconds: 200),
+      motion ?? tokens.navMotion,
     );
     final decoration = BoxDecoration(
       color: background,
@@ -64,6 +65,7 @@ class SafaehFloatingNavBar extends StatelessWidget {
     );
 
     return SafeArea(
+      top: false,
       child: Container(
         margin: margin,
         decoration: decoration,
@@ -73,47 +75,66 @@ class SafaehFloatingNavBar extends StatelessWidget {
             final destination = destinations[index];
             final isSelected = index == selectedIndex;
             final color = isSelected ? active : inactive;
+            final labelStyle =
+                theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: isSelected
+                      ? FontWeight.w600
+                      : FontWeight.normal,
+                ) ??
+                TextStyle(
+                  color: color,
+                  fontWeight: isSelected
+                      ? FontWeight.w600
+                      : FontWeight.normal,
+                );
 
             return Expanded(
               child: Material(
                 color: Colors.transparent,
-                child: InkWell(
-                  key: destination.tileKey ?? ValueKey('safaeh_fab_nav_$index'),
-                  onTap: () => onDestinationSelected(index),
-                  borderRadius: BorderRadius.circular(12),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minHeight: 44,
-                      minWidth: 44,
-                    ),
-                    child: AnimatedContainer(
-                      duration: tabMotion,
-                      curve: Curves.easeInOut,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isSelected
-                                ? destination.selectedIcon
-                                : destination.icon,
-                            color: color,
-                            size: iconSize,
-                          ),
-                          if (destination.label.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            AnimatedDefaultTextStyle(
-                              duration: tabMotion,
-                              style: theme.textTheme.labelSmall!.copyWith(
-                                color: color,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                              ),
-                              child: Text(destination.label),
+                child: Semantics(
+                  button: true,
+                  selected: isSelected,
+                  child: InkWell(
+                    key:
+                        destination.tileKey ??
+                        ValueKey('safaeh_fab_nav_$index'),
+                    onTap: () => onDestinationSelected(index),
+                    borderRadius: BorderRadius.circular(12),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: 44,
+                        minWidth: 44,
+                      ),
+                      child: AnimatedContainer(
+                        duration: tabMotion,
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isSelected
+                                  ? destination.selectedIcon
+                                  : destination.icon,
+                              color: color,
+                              size: iconSize,
                             ),
+                            if (destination.label.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              AnimatedDefaultTextStyle(
+                                duration: tabMotion,
+                                style: labelStyle,
+                                child:
+                                    destination.labelBuilder?.call(
+                                      destination.label,
+                                      labelStyle,
+                                    ) ??
+                                    Text(destination.label),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),

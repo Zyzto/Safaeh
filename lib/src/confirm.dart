@@ -45,6 +45,7 @@ class SafaehConfirmSheet extends StatelessWidget {
     );
     final resolvedCancel =
         cancelLabel ?? MaterialLocalizations.of(context).cancelButtonLabel;
+    final radius = BorderRadius.circular(tokens.radius);
 
     return buildSafaehSheetShell(
       showTitleInBody: !isWide,
@@ -54,7 +55,7 @@ class SafaehConfirmSheet extends StatelessWidget {
       body: DecoratedBox(
         decoration: BoxDecoration(
           color: cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: radius,
           border: Border.all(color: cs.outline),
         ),
         child: Padding(
@@ -68,19 +69,18 @@ class SafaehConfirmSheet extends StatelessWidget {
         if (!isWide)
           TextButton(
             key: const ValueKey('safaeh_cancel'),
-            onPressed: () {
-              final navigator = Navigator.of(context, rootNavigator: true);
-              if (navigator.canPop()) navigator.pop(false);
-            },
+            onPressed: () => safaehPop(context, false),
             child: Text(resolvedCancel),
           ),
-        _SafaehConfirmButton(
-          label: confirmLabel,
-          isDestructive: isDestructive,
-          onConfirm: () {
-            final navigator = Navigator.of(context, rootNavigator: true);
-            if (navigator.canPop()) navigator.pop(true);
-          },
+        FilledButton(
+          key: const ValueKey('safaeh_confirm'),
+          style: FilledButton.styleFrom(
+            backgroundColor: isDestructive ? cs.error : cs.primary,
+            foregroundColor: isDestructive ? cs.onError : cs.onPrimary,
+            shape: RoundedRectangleBorder(borderRadius: radius),
+          ),
+          onPressed: () => safaehPop(context, true),
+          child: Text(confirmLabel),
         ),
       ],
     );
@@ -90,6 +90,9 @@ class SafaehConfirmSheet extends StatelessWidget {
 /// Adaptive confirm. Hosts pass every label — no `.tr()` here.
 ///
 /// Returns `true` if confirmed, `false` if cancelled, `null` if dismissed.
+///
+/// Pass [dismissReturnsFalse] so a barrier tap or tablet close also yields
+/// `false` (hosts that treat only `ok == true` as confirm can ignore this).
 Future<bool?> showSafaehConfirm({
   required BuildContext context,
   required String title,
@@ -97,28 +100,42 @@ Future<bool?> showSafaehConfirm({
   required String confirmLabel,
   String? cancelLabel,
   bool isDestructive = false,
+  bool dismissReturnsFalse = false,
   SafaehTitleBuilder? titleBuilder,
   SafaehTitleBuilder? contentBuilder,
   double Function(BuildContext context)? railWidthOf,
   SafaehTransition? fadeScale,
   SafaehTransition? slideUp,
+  SafaehPhoneSheetPlacement phonePlacement = SafaehPhoneSheetPlacement.bottom,
   double? tabletBreakpoint,
   Duration? motion,
   Curve? enterCurve,
+  Curve? exitCurve,
+  double? maxWidth,
   double? maxHeight,
+  bool barrierDismissible = true,
+  bool useRootNavigator = true,
+  SafaehRouteOptions? route,
 }) {
-  final height = maxHeight ?? MediaQuery.sizeOf(context).height * 0.75;
   return showSafaeh<bool>(
     context: context,
     title: title,
     titleBuilder: titleBuilder,
-    maxHeight: height,
+    maxWidth: maxWidth,
+    maxHeight: maxHeight,
+    barrierDismissible: barrierDismissible,
     tabletBreakpoint: tabletBreakpoint,
     motion: motion,
     enterCurve: enterCurve,
+    exitCurve: exitCurve,
     railWidthOf: railWidthOf,
     fadeScale: fadeScale,
     slideUp: slideUp,
+    phonePlacement: phonePlacement,
+    dismissValue: dismissReturnsFalse ? false : null,
+    useRootNavigator: useRootNavigator,
+    paintPhoneTitle: false,
+    route: route,
     child: SafaehConfirmSheet(
       title: title,
       content: content,
@@ -130,49 +147,4 @@ Future<bool?> showSafaehConfirm({
       tabletBreakpoint: tabletBreakpoint,
     ),
   );
-}
-
-/// Ink confirm so taps fire when stacked on another modal (no focus steal).
-class _SafaehConfirmButton extends StatelessWidget {
-  const _SafaehConfirmButton({
-    required this.label,
-    required this.isDestructive,
-    required this.onConfirm,
-  });
-
-  final String label;
-  final bool isDestructive;
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final backgroundColor = isDestructive
-        ? colorScheme.error
-        : colorScheme.primary;
-    final foregroundColor = isDestructive
-        ? colorScheme.onError
-        : colorScheme.onPrimary;
-
-    return Material(
-      key: const ValueKey('safaeh_confirm'),
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onConfirm,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-          child: Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: foregroundColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

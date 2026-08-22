@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Places [aside] in the end gutter of a centered content band.
 ///
-/// [leftOffset] is a **physical** left inset (use a forced-LTR [Row]).
+/// [leftOffset] is a **physical** left inset (use a forced-LTR [Row]),
+/// not a start inset. Pass [isRtl] so the aside sits on the end.
 /// Hisab computes offsets via [LayoutBreakpoints.contentBandMetrics].
 class SafaehEndAsideLayout extends StatelessWidget {
   const SafaehEndAsideLayout({

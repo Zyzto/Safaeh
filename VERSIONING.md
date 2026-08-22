@@ -1,6 +1,6 @@
 # Versioning & releases
 
-Safaeh uses **[SemVer](https://semver.org/)**:
+Safaeh (`safaeh`) uses **[SemVer](https://semver.org/)**:
 
 | Part | When to bump |
 |------|----------------|
@@ -8,20 +8,34 @@ Safaeh uses **[SemVer](https://semver.org/)**:
 | **MINOR** | Backward-compatible features |
 | **PATCH** | Backward-compatible fixes |
 
-The package is **not** on pub.dev (`publish_to: none`). Consumers depend on a
-**git tag** `vMAJOR.MINOR.PATCH` that matches `version:` in
-[`pubspec.yaml`](pubspec.yaml) (build metadata `+N` is ignored for tagging).
+**Milestone exception:** `0.2.0` is a packaging milestone (first pub.dev
+publish path) plus phone-sheet / RTL / catalog work. Future docs-only
+work should prefer PATCH.
+
+## Tag format
+
+Git tags are `vMAJOR.MINOR.PATCH` (example: `v0.2.0`).
+
+The tag **must** match `version:` in [`pubspec.yaml`](pubspec.yaml) (build metadata `+N` is ignored for tagging).
+
+## Consumer apps (e.g. Hisab)
+
+Prefer **pub.dev**:
+
+```yaml
+dependencies:
+  safaeh: ^0.2.0
+```
+
+Or pin a **git tag** (not `main` or a raw commit):
 
 ```yaml
 dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.1.0
+      ref: v0.2.0
 ```
-
-Do not publish this package to pub.dev until the API is marked stable and
-`publish_to` is removed.
 
 ## Release checklist
 
@@ -36,8 +50,9 @@ Do not publish this package to pub.dev until the API is marked stable and
 ```
 
 This runs analyze + tests, creates an annotated tag `vX.Y.Z`, and pushes it.
-The **Release** GitHub Action then re-verifies the tag, runs tests, and
-creates a GitHub Release. This package is not published to pub.dev.
+The **Release** GitHub Action then re-verifies the tag, runs tests, creates a
+GitHub Release, and publishes to **pub.dev** (OIDC; requires Automated
+publishing enabled for this repo).
 
 Dry-run:
 
@@ -53,7 +68,7 @@ Optional `VERSION` file, if present, must match pubspec.
 |----------|---------|----------------|
 | [CI](.github/workflows/ci.yml) | push/PR to `main` | version check, `dart analyze --fatal-infos`, `flutter test --coverage`, example analyze + test |
 | [GitHub Pages](.github/workflows/pages.yml) | push to `main` | build `example/` web and deploy to [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/) |
-| [Release](.github/workflows/release.yml) | tag `v*.*.*` | tag↔pubspec check, CHANGELOG check, tests, GitHub Release |
+| [Release](.github/workflows/release.yml) | tag `v*.*.*` | tag↔pubspec check, CHANGELOG check, tests, GitHub Release, pub.dev publish |
 
 `scripts/check_version.sh` verifies pubspec semver, a matching CHANGELOG
 heading, and an optional `VERSION` file.

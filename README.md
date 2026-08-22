@@ -13,10 +13,10 @@
 </p>
 
 <p align="center">
+  <a href="https://pub.dev/packages/safaeh"><img alt="pub.dev" src="https://img.shields.io/pub/v/safaeh.svg?style=flat-square&label=pub.dev&color=8B6914" /></a>
   <a href="https://github.com/Zyzto/Safaeh"><img alt="repo" src="https://img.shields.io/badge/github-Zyzto%2FSafaeh-C0C0C0?style=flat-square" /></a>
   <img alt="flutter" src="https://img.shields.io/badge/Flutter-%3E%3D3.11-C0C0C0?style=flat-square&logo=flutter&logoColor=white" />
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MPL--2.0-8B6914?style=flat-square" /></a>
-  <img alt="status" src="https://img.shields.io/badge/publish-git%20tag-2E7D32?style=flat-square" />
 </p>
 
 <p align="center">
@@ -56,8 +56,7 @@ overlays. Then you need:
 **Safaeh** is that chrome layer. Hisab wraps it with `UserText`, rail width,
 permissions, and the live camera / QR decoder.
 
-Repo: [Zyzto/Safaeh](https://github.com/Zyzto/Safaeh). Not published to pub.dev.
-Hisab is the reference host.
+On pub.dev: [`safaeh`](https://pub.dev/packages/safaeh) · Repo: [Zyzto/Safaeh](https://github.com/Zyzto/Safaeh). Hisab is the reference host.
 
 ---
 
@@ -89,13 +88,15 @@ Hisab is the reference host.
 
 </details>
 
+Rendered from the [`example/`](example/) catalog (`cd example && flutter test test/screenshots_test.dart`).
+
 ---
 
 ## Features at a glance
 
 | Area | What you get |
 |------|----------------|
-| **Sheets** | `showSafaeh` morphs phone sheet ↔ tablet dialog; `showSafaehPicker` / `SafaehOption` (cards, `enabled`); `showSafaehTilePicker` / `SafaehTileOption` (list rows, `header` / `leading` / `enabled`); `showSafaehConfirm`, `showSafaehTextInput`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile` |
+| **Sheets** | `showSafaeh` morphs phone sheet ↔ tablet dialog; `showSafaehPicker` / `SafaehOption` (cards, `enabled`); `showSafaehTilePicker` / `SafaehTileOption` (list rows, search); `showSafaehMultiTilePicker` (multi-select); `showSafaehConfirm`, `showSafaehTextInput`, `SafaehStatusBody`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile` |
 | **Dialog** | `showSafaehDialog` centered panel with optional `railWidthOf` |
 | **Theme** | `SafaehTheme` / `SafaehThemeData` for breakpoint, motion, radius, rail widths, camera compact height, `contentMaxWidth`; `copyWith` |
 | **Motion** | `safaehResolvedMotion` zeros durations when animations are disabled |
@@ -103,7 +104,8 @@ Hisab is the reference host.
 | **Page index** | `SafaehPageIndex`, overlay, `scrollToPageSection`, `safaehActivePageSectionId` (ids + keys only — no `.tr()` on scroll) |
 | **Content** | `safaehBandMetrics`, `SafaehContentBand`, `SafaehEndAsideLayout`, `SafaehContentAlignedAppBar`, `SafaehContentAlignedFabLocation` |
 | **Camera** | `showSafaehCameraSheet` / `SafaehCameraSheetHost` paper-roll compact ↔ full |
-| **QR chrome** | `SafaehQrScannerOverlay`, `SafaehQrTopBar`, `SafaehQrMessageBody`, `SafaehQrFramePainter` |
+| **QR chrome** | `SafaehQrScannerOverlay` (optional host `preview`), `SafaehQrTopBar`, `SafaehQrMessageBody`, `SafaehQrFramePainter` |
+| **RTL** | `safaehChevronEnd`, `safaehChevronStart`, `safaehArrowBack` (LTR glyphs; Material `matchTextDirection` mirrors them) |
 
 **Core:** Flutter Material only. Preview, decode, copy, and navigation stay in the host.
 
@@ -111,22 +113,32 @@ Hisab is the reference host.
 
 ## Install
 
-Git tag (not `main`):
+```yaml
+dependencies:
+  safaeh: ^0.2.0
+```
+
+Or:
+
+```bash
+flutter pub add safaeh
+```
+
+Git tag pin (see [VERSIONING.md](VERSIONING.md)):
 
 ```yaml
 dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.1.0
+      ref: v0.2.0
 ```
 
 ```dart
 import 'package:safaeh/safaeh.dart';
 ```
 
-Current version: **0.1.0**. See [CHANGELOG.md](CHANGELOG.md) and
-[VERSIONING.md](VERSIONING.md). `publish_to: none` — not on pub.dev.
+Current version: **0.2.0**.
 
 ---
 
@@ -160,7 +172,9 @@ await showSafaeh<void>(
 ```
 
 Phone: bottom sheet. Tablet+: centered dialog. The same route morphs when width
-crosses `tabletBreakpoint`.
+crosses `tabletBreakpoint`. Pass `phonePlacement: SafaehPhoneSheetPlacement.center`
+to grow the phone sheet so the first content center aligns with the phone
+center (still flush with the bottom).
 
 ### 3. Option picker
 
@@ -216,8 +230,8 @@ other `showSafaeh*` helpers (`railWidthOf`, `motion`, …).
 
 Host passes every label. Phone shows cancel in the action row; tablet uses the
 sheet close control. `showSafaehConfirm` returns `true` if confirmed, `false`
-if the phone cancel button is pressed, and `null` if dismissed (tablet close
-or barrier). Treat only `ok == true` as confirmed.
+if the phone cancel button is pressed, and `null` if dismissed (tablet close,
+barrier, or system back). Treat only `ok == true` as confirmed.
 
 ```dart
 final ok = await showSafaehConfirm(
@@ -312,8 +326,9 @@ await showSafaehCameraSheet<void>(
 ```
 
 Embed on a route with `SafaehCameraSheetHost` (omit `openAnimation`, pass
-`onDismiss`). Overlay a scanner with `SafaehQrScannerOverlay` — keep
-`mobile_scanner` in the app.
+`onDismiss`). Put `SafaehQrScannerOverlay` / `SafaehQrMessageBody` **inside**
+that bottom panel — they are full-bleed overlays, not their own sheet.
+Keep `mobile_scanner` in the app.
 
 ---
 
@@ -334,7 +349,7 @@ tests stay green.
 
 ## UI inventory
 
-**Sheets:** `showSafaeh`, `showSafaehPicker`, `SafaehOption`, `showSafaehTilePicker`, `SafaehTileOption`, `SafaehTilePickerBody`, `SafaehTileBuilder`, `showSafaehConfirm`, `SafaehConfirmSheet`, `showSafaehTextInput`, `SafaehTextInputSheet`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile`, `kSheetContentPadding`, `kSafaehSheetPadding`, `SafaehTitleBuilder`, `SafaehTransition`
+**Sheets:** `showSafaeh`, `SafaehRouteOptions`, `showSafaehPicker`, `SafaehOption`, `SafaehOptionPickerBody`, `showSafaehTilePicker`, `showSafaehMultiTilePicker`, `SafaehTileOption`, `SafaehTilePickerBody`, `SafaehTileBuilder`, `showSafaehConfirm`, `SafaehConfirmSheet`, `showSafaehTextInput`, `SafaehTextInputSheet`, `SafaehStatusBody`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile`, `kSheetContentPadding`, `kSafaehSheetPadding`, `SafaehTitleBuilder`, `SafaehLabelBuilder`, `safaehTitleFromLabel`, `safaehPop`, `SafaehTransition`, `safaehFadeScale`, `safaehFade`, `SafaehPhoneSheetPlacement`, `safaehPhoneCenterSheetTop`
 
 **Dialog:** `showSafaehDialog`
 
@@ -342,9 +357,11 @@ tests stay green.
 
 **QR:** `SafaehQrScannerOverlay`, `SafaehQrTopBar`, `SafaehQrMessageBody`, `SafaehQrFramePainter`
 
-**Shell:** `SafaehSidenav`, `SafaehSidenavDestination`, `SafaehSidenavProfile`, `SafaehFloatingNavBar`, `SafaehPageIndex`, `SafaehPageIndexOverlay`, `scrollToPageSection`, `safaehActivePageSectionId`, `safaehBandMetrics`, `SafaehContentBand`, `SafaehEndAsideLayout`, `SafaehContentAlignedAppBar`, `SafaehContentAlignedFabLocation`
+**Shell:** `SafaehSidenav`, `SafaehSidenavDestination`, `SafaehSidenavProfile`, `SafaehSidenavAvatar`, `SafaehFloatingNavBar`, `SafaehPageIndex`, `SafaehPageIndexOverlay`, `scrollToPageSection`, `safaehActivePageSectionId`, `safaehBandMetrics`, `SafaehContentBand`, `SafaehEndAsideLayout`, `SafaehContentAlignedAppBar`, `SafaehContentAlignedFabLocation`
 
 **Tokens:** `SafaehTheme`, `SafaehThemeData`, `SafaehThemeData.copyWith`, `safaehResolvedMotion`, `kSafaehCameraCompactHeightFraction`
+
+**RTL:** `safaehChevronEnd`, `safaehChevronStart`, `safaehArrowBack`
 
 ---
 
@@ -376,17 +393,22 @@ tests stay green.
 ## Example
 
 A Riverpod-free catalog lives in [`example/`](example/) — same split as
-[Edadat](https://github.com/Zyzto/Edadat): `catalog.dart` (EN/AR copy),
-`app.dart` (theme + home), and a vertical gallery of every public API.
-Language and theme toggles, no `mobile_scanner`.
+[Edadat](https://github.com/Zyzto/Edadat): `catalog.dart` (en / ar / ja / zh / es),
+`app.dart` (theme + home), and a vertical `SafaehContentBand` gallery of every
+public API. Section titles open the standalone demo; wide bands use extra
+columns on the same page. Language and theme toggles, no `mobile_scanner`.
 
 Live web build: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
 
+The example is package-style (web only in-tree); analyze with:
+
 ```bash
-cd example && dart analyze && flutter test
+cd example && flutter pub get && dart analyze --fatal-infos && flutter test
 ```
 
 `example/test/screenshots_test.dart` writes PNGs to [`screenshots/`](screenshots/).
+
+To run on a device, generate the other platforms (`flutter create . --platforms=android,ios` inside `example/`). Details: [example/README.md](example/README.md).
 
 Hisab is the reference host: it installs `SafaehTheme`, wraps `showSafaeh` as
 `showResponsiveSheet`, and the receipt camera / invite scanner wrap
@@ -395,7 +417,7 @@ Hisab is the reference host: it installs `SafaehTheme`, wraps `showSafaeh` as
 Package tests:
 
 ```bash
-dart analyze && flutter test
+dart analyze --fatal-infos && flutter test
 ```
 
 ---
@@ -406,10 +428,16 @@ The logo wordmark uses **[Baz](https://www.1001fonts.com/baz-font.html)** (Baz L
 
 ---
 
+## Versioning
+
+See [VERSIONING.md](VERSIONING.md) and [CHANGELOG.md](CHANGELOG.md). Tags are `vX.Y.Z` and must match `pubspec.yaml`.
+
+---
+
 ## License
 
 [MPL-2.0](LICENSE) — weak copyleft, commercial use allowed. Modified package
 files stay under MPL; your app can remain closed-source.
 
-Standalone repo (`publish_to: none`). Hisab as a larger work stays AGPL and
-depends on a git tag.
+Hisab as a larger work stays AGPL and can depend on the pub.dev package or a
+git tag.

@@ -76,3 +76,13 @@ jobs:
           name: ${{ github.ref_name }}
           body_path: /tmp/notes.md
           generate_release_notes: true
+
+  # Requires Automated publishing on pub.dev Admin → GitHub Actions
+  # for safaeh → Zyzto/Safaeh, tag pattern v{{version}}.
+  # Docs: https://dart.dev/tools/pub/automated-publishing
+  publish:
+    name: Publish to pub.dev
+    needs: verify
+    permissions:
+      id-token: write # OIDC for pub.dev
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1

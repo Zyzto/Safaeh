@@ -25,89 +25,76 @@ class SafaehOption<T> {
   final bool enabled;
 }
 
-/// Compact single-select picker. Wide = dialog, phone = bottom sheet.
-Future<T?> showSafaehPicker<T>({
-  required BuildContext context,
-  required String title,
-  required List<SafaehOption<T>> options,
-  required T selected,
-  String? footer,
-  SafaehTitleBuilder? titleBuilder,
-  double Function(BuildContext context)? railWidthOf,
-  double? tabletBreakpoint,
-  Duration? motion,
-  Curve? enterCurve,
-  SafaehTransition? fadeScale,
-  SafaehTransition? slideUp,
-}) {
-  final tokens = SafaehTheme.of(context);
-  final breakpoint = tabletBreakpoint ?? tokens.tabletBreakpoint;
-  return showSafaeh<T>(
-    context: context,
-    title: title,
-    titleBuilder: titleBuilder,
-    contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-    tabletBreakpoint: breakpoint,
-    motion: motion,
-    enterCurve: enterCurve,
-    railWidthOf: railWidthOf,
-    fadeScale: fadeScale,
-    slideUp: slideUp,
-    child: _OptionPickerBody<T>(
-      title: title,
-      titleBuilder: titleBuilder,
-      options: options,
-      selected: selected,
-      footer: footer,
-      tabletBreakpoint: breakpoint,
-    ),
-  );
-}
-
-class _OptionPickerBody<T> extends StatelessWidget {
-  const _OptionPickerBody({
-    required this.title,
+/// Card-picker body: optional in-body title, option cards, [footer].
+///
+/// Hosts that already wrap [showSafaeh] can mount this widget as the child.
+/// [showSafaehPicker] does that for you.
+class SafaehOptionPickerBody<T> extends StatelessWidget {
+  const SafaehOptionPickerBody({
+    super.key,
     required this.options,
-    required this.selected,
-    required this.tabletBreakpoint,
+    this.title,
     this.titleBuilder,
+    this.selected,
     this.footer,
+    this.tabletBreakpoint,
+    this.onSelected,
   });
 
-  final String title;
+  final String? title;
   final SafaehTitleBuilder? titleBuilder;
   final List<SafaehOption<T>> options;
-  final T selected;
+  final T? selected;
   final String? footer;
-  final double tabletBreakpoint;
+  final double? tabletBreakpoint;
+
+  /// When set, option taps call this instead of [safaehPop] (catalog
+  /// previews that must stay open).
+  final ValueChanged<T>? onSelected;
 
   @override
   Widget build(BuildContext context) {
+    final tokens = SafaehTheme.of(context);
+    final breakpoint = tabletBreakpoint ?? tokens.tabletBreakpoint;
     final theme = Theme.of(context);
-    final showInBodyTitle = MediaQuery.sizeOf(context).width < tabletBreakpoint;
+    final showInBodyTitle = MediaQuery.sizeOf(context).width < breakpoint;
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w700,
     );
+    final showTitle =
+        showInBodyTitle &&
+        ((title != null && title!.isNotEmpty) || titleBuilder != null);
+
     return SafeArea(
       top: false,
       bottom: false,
       child: SingleChildScrollView(
-        child: Column(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (showInBodyTitle) ...[
+            if (showTitle) ...[
               titleBuilder?.call(context, titleStyle) ??
-                  Text(title, style: titleStyle),
+                  Text(title ?? '', style: titleStyle),
               const SizedBox(height: 10),
             ],
             for (var i = 0; i < options.length; i++) ...[
               if (i > 0) const SizedBox(height: 6),
               _OptionCard<T>(
                 option: options[i],
-                selected: options[i].value == selected,
+                selected: selected != null && options[i].value == selected,
                 onTap: options[i].enabled
-                    ? () => Navigator.pop(context, options[i].value)
+                    ? () {
+                        final value = options[i].value;
+                        final intercept = onSelected;
+                        if (intercept != null) {
+                          intercept(value);
+                          return;
+                        }
+                        safaehPop(context, value);
+                      }
                     : null,
               ),
             ],
@@ -123,9 +110,63 @@ class _OptionPickerBody<T> extends StatelessWidget {
             ],
           ],
         ),
+        ),
       ),
     );
   }
+}
+
+/// Compact single-select picker. Wide = dialog, phone = bottom sheet.
+Future<T?> showSafaehPicker<T>({
+  required BuildContext context,
+  String? title,
+  required List<SafaehOption<T>> options,
+  T? selected,
+  String? footer,
+  SafaehTitleBuilder? titleBuilder,
+  double Function(BuildContext context)? railWidthOf,
+  double? tabletBreakpoint,
+  double? maxWidth,
+  double? maxHeight,
+  bool barrierDismissible = true,
+  Duration? motion,
+  Curve? enterCurve,
+  Curve? exitCurve,
+  SafaehTransition? fadeScale,
+  SafaehTransition? slideUp,
+  SafaehPhoneSheetPlacement phonePlacement = SafaehPhoneSheetPlacement.bottom,
+  bool useRootNavigator = true,
+  SafaehRouteOptions? route,
+}) {
+  final tokens = SafaehTheme.of(context);
+  final breakpoint = tabletBreakpoint ?? tokens.tabletBreakpoint;
+  return showSafaeh<T>(
+    context: context,
+    title: title,
+    titleBuilder: titleBuilder,
+    tabletBreakpoint: breakpoint,
+    maxWidth: maxWidth,
+    maxHeight: maxHeight,
+    barrierDismissible: barrierDismissible,
+    motion: motion,
+    enterCurve: enterCurve,
+    exitCurve: exitCurve,
+    railWidthOf: railWidthOf,
+    fadeScale: fadeScale,
+    slideUp: slideUp,
+    phonePlacement: phonePlacement,
+    useRootNavigator: useRootNavigator,
+    paintPhoneTitle: false,
+    route: route,
+    child: SafaehOptionPickerBody<T>(
+      title: title,
+      titleBuilder: titleBuilder,
+      options: options,
+      selected: selected,
+      footer: footer,
+      tabletBreakpoint: breakpoint,
+    ),
+  );
 }
 
 class _OptionCard<T> extends StatelessWidget {
@@ -144,17 +185,22 @@ class _OptionCard<T> extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final enabled = option.enabled;
-    return Opacity(
-      opacity: enabled ? 1 : 0.5,
-      child: Material(
-        color: selected ? cs.primaryContainer : cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Ink(
+    final radius = BorderRadius.circular(SafaehTheme.of(context).radius);
+    return Semantics(
+      button: true,
+      selected: selected,
+      enabled: enabled,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.5,
+        child: Material(
+          color: selected ? cs.primaryContainer : cs.surfaceContainerHighest,
+          borderRadius: radius,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            child: Ink(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: radius,
               border: Border.all(color: selected ? cs.primary : cs.outline),
             ),
             child: Padding(
@@ -219,16 +265,11 @@ class _OptionCard<T> extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (selected)
-                    Icon(
-                      Icons.check_circle_rounded,
-                      color: cs.onPrimaryContainer,
-                      size: 18,
-                    ),
                 ],
               ),
             ),
           ),
+        ),
         ),
       ),
     );

@@ -139,8 +139,100 @@ class SafaehTheme extends InheritedWidget {
   bool updateShouldNotify(SafaehTheme oldWidget) => data != oldWidget.data;
 }
 
+/// Host bidi / i18n wrapper for a string label. Same shape on sidenav,
+/// floating nav, and page index.
+typedef SafaehLabelBuilder = Widget Function(String data, TextStyle? style);
+
+/// Which navigator [safaehPop] uses. [showSafaeh] / dialog / camera set this.
+class SafaehNavigatorScope extends InheritedWidget {
+  const SafaehNavigatorScope({
+    super.key,
+    required this.useRootNavigator,
+    required super.child,
+  });
+
+  final bool useRootNavigator;
+
+  static bool of(BuildContext context) {
+    return context
+            .dependOnInheritedWidgetOfExactType<SafaehNavigatorScope>()
+            ?.useRootNavigator ??
+        true;
+  }
+
+  @override
+  bool updateShouldNotify(SafaehNavigatorScope oldWidget) =>
+      useRootNavigator != oldWidget.useRootNavigator;
+}
+
+/// Pops the navigator that opened the current Safaeh route.
+///
+/// [PopScope.canPop] false makes [Navigator.canPop] false even when a
+/// dialog is on the stack. Chrome dismiss still pops that route.
+void safaehPop<T>(BuildContext context, [T? result]) {
+  final navigator = Navigator.of(
+    context,
+    rootNavigator: SafaehNavigatorScope.of(context),
+  );
+  if (navigator.canPop()) {
+    navigator.pop(result);
+    return;
+  }
+  final route = ModalRoute.of(context);
+  if (route != null && route.isCurrent && !route.isFirst) {
+    navigator.pop(result);
+  }
+}
+
 /// Zero when the platform has asked to disable animations.
 Duration safaehResolvedMotion(BuildContext context, Duration motion) {
   if (MediaQuery.disableAnimationsOf(context)) return Duration.zero;
   return motion;
+}
+
+/// [SafaehThemeData.enterCurve] while opening, [exitCurve] while reversing.
+Curve safaehCurveFor(BuildContext context, Animation<double> animation) {
+  final tokens = SafaehTheme.of(context);
+  return animation.status == AnimationStatus.reverse
+      ? tokens.exitCurve
+      : tokens.enterCurve;
+}
+
+/// Default tablet dialog enter: fade + slight scale.
+Widget safaehFadeScale({
+  required Animation<double> animation,
+  required Widget child,
+}) {
+  return AnimatedBuilder(
+    animation: animation,
+    builder: (context, child) {
+      final t = safaehCurveFor(
+        context,
+        animation,
+      ).transform(animation.value.clamp(0.0, 1.0));
+      return Opacity(
+        opacity: t,
+        child: Transform.scale(scale: 0.96 + (0.04 * t), child: child),
+      );
+    },
+    child: child,
+  );
+}
+
+/// Fade-only enter / exit.
+Widget safaehFade({
+  required Animation<double> animation,
+  required Widget child,
+}) {
+  return AnimatedBuilder(
+    animation: animation,
+    builder: (context, child) {
+      final t = safaehCurveFor(
+        context,
+        animation,
+      ).transform(animation.value.clamp(0.0, 1.0));
+      return Opacity(opacity: t, child: child);
+    },
+    child: child,
+  );
 }

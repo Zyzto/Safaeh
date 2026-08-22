@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'theme.dart';
+
 /// Bordered ink row for sheet action / picker lists.
 ///
 /// Defaults use [ColorScheme] only. Hosts that need a brand accent can pass
@@ -52,26 +54,32 @@ class SafaehOptionTile extends StatelessWidget {
     final border = selected
         ? (selectedBorder ?? cs.primary)
         : cs.outline;
+    final radius = BorderRadius.circular(SafaehTheme.of(context).radius);
 
-    return Material(
-      color: fill,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        canRequestFocus: false,
-        onTap: onTapEnabled,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
+    return Semantics(
+      button: true,
+      selected: selected,
+      enabled: enabled,
+      child: Material(
+        color: fill,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTapEnabled,
+          borderRadius: radius,
+          child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: radius,
             border: Border.all(color: border),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             child: DefaultTextStyle.merge(
-              style: theme.textTheme.bodyLarge!.copyWith(
-                color: titleColor,
-                fontWeight: FontWeight.w600,
-              ),
+              style: (theme.textTheme.bodyLarge ?? theme.textTheme.bodyMedium)
+                      ?.copyWith(
+                        color: titleColor,
+                        fontWeight: FontWeight.w600,
+                      ) ??
+                  TextStyle(color: titleColor, fontWeight: FontWeight.w600),
               child: IconTheme.merge(
                 data: IconThemeData(color: titleColor),
                 child: Row(
@@ -93,9 +101,11 @@ class SafaehOptionTile extends StatelessWidget {
                           if (subtitle != null) ...[
                             const SizedBox(height: 2),
                             DefaultTextStyle.merge(
-                              style: theme.textTheme.bodySmall!.copyWith(
-                                color: subtitleColor,
-                              ),
+                              style:
+                                  (theme.textTheme.bodySmall ??
+                                          theme.textTheme.bodyMedium)
+                                      ?.copyWith(color: subtitleColor) ??
+                                  TextStyle(color: subtitleColor),
                               child: subtitle!,
                             ),
                           ],
@@ -112,6 +122,7 @@ class SafaehOptionTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:safaeh/safaeh.dart';
 import 'appearance_toggles.dart';
 import 'catalog.dart';
 import 'gallery.dart';
+import 'theme_ripple.dart';
 
 /// Gold seed kept for brand, with contrast overrides so outline / secondary
 /// copy stay readable on cream and charcoal surfaces.
@@ -89,8 +90,8 @@ class _SafaehExampleAppState extends State<SafaehExampleApp> {
       child: MaterialApp(
         title: translateCatalog('app_title', _locale),
         debugShowCheckedModeBanner: false,
-        locale: Locale(_locale),
-        supportedLocales: const [Locale('en'), Locale('ar')],
+        locale: catalogFlutterLocale(_locale),
+        supportedLocales: [for (final item in catalogLocales) item.locale],
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
@@ -100,23 +101,18 @@ class _SafaehExampleAppState extends State<SafaehExampleApp> {
         darkTheme: catalogTheme(Brightness.dark),
         themeMode: _themeMode,
         builder: (context, child) {
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              ?child,
-              CatalogAppearanceToggles(
-                localeCode: _locale,
-                themeMode: _themeMode,
-                onToggleLocale: () => setState(() {
-                  _locale = _locale == 'en' ? 'ar' : 'en';
-                }),
-                onToggleTheme: () => setState(() {
-                  _themeMode = _themeMode == ThemeMode.dark
-                      ? ThemeMode.light
-                      : ThemeMode.dark;
-                }),
-              ),
-            ],
+          return ThemeRippleHost(
+            overlay: CatalogAppearanceToggles(
+              localeCode: _locale,
+              themeMode: _themeMode,
+              onSelectLocale: (code) => setState(() => _locale = code),
+              onToggleTheme: () => setState(() {
+                _themeMode = _themeMode == ThemeMode.dark
+                    ? ThemeMode.light
+                    : ThemeMode.dark;
+              }),
+            ),
+            child: child ?? const SizedBox.shrink(),
           );
         },
         home: CatalogHome(localeCode: _locale),
@@ -139,7 +135,12 @@ class CatalogHome extends StatelessWidget {
         title: Text(t('app_title')),
         actions: const [SizedBox(width: 104)],
       ),
-      body: CatalogGallery(t: t),
+      // No SafaehPageIndex / overlay on home — those live only in the
+      // page-index demo widgets (own scroll + keys).
+      body: SafaehContentBand(
+        maxWidth: kCatalogBandMaxWidth,
+        child: CatalogGallery(t: t),
+      ),
     );
   }
 }

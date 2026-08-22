@@ -3,6 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:safaeh/safaeh.dart';
 
 void main() {
+  test('sidenav initials fold Latin only', () {
+    expect(safaehSidenavInitials('Ada Lovelace'), 'AL');
+    expect(safaehSidenavInitials('ada'), 'A');
+    expect(safaehSidenavInitials('山田 太郎'), '山太');
+    expect(safaehSidenavInitials('نورة'), 'ن');
+  });
+
   testWidgets('picker shows padding and options', (tester) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;
@@ -50,6 +57,8 @@ void main() {
     expect(find.text('Minimal'), findsOneWidget);
     expect(find.text('Live'), findsOneWidget);
     expect(find.text('Footer copy'), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle_rounded), findsNothing);
+    expect(find.byIcon(Icons.check), findsNothing);
 
     tester.view.physicalSize = const Size(900, 800);
     await tester.pumpAndSettle();
@@ -203,6 +212,144 @@ void main() {
     expect(value, 'hello');
   });
 
+  testWidgets('text input sheet follows initialValue updates', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehTextInputSheet(
+            key: ValueKey('sheet'),
+            title: 'Tag',
+            doneLabel: 'Done',
+            initialValue: 'alpha',
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'alpha',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehTextInputSheet(
+            key: ValueKey('sheet'),
+            title: 'Tag',
+            doneLabel: 'Done',
+            initialValue: 'beta',
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'beta',
+    );
+  });
+
+  testWidgets('obscure text input forces a single line', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehTextInputSheet(
+            title: 'Pin',
+            doneLabel: 'Done',
+            obscureText: true,
+            maxLines: 3,
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.obscureText, isTrue);
+    expect(field.maxLines, 1);
+    expect(field.keyboardType, isNot(TextInputType.multiline));
+  });
+
+  testWidgets('text input forwards keyboardType and action', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehTextInputSheet(
+            title: 'Amount',
+            doneLabel: 'Done',
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+          ),
+        ),
+      ),
+    );
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.keyboardType, TextInputType.number);
+    expect(field.textInputAction, TextInputAction.done);
+  });
+
+  testWidgets('text input shows the maxLength counter', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehTextInputSheet(
+            title: 'Note',
+            doneLabel: 'Done',
+            maxLength: 8,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('0/8'), findsOneWidget);
+  });
+
+  testWidgets('text input onChanged reports edits', (tester) async {
+    var last = '';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehTextInputSheet(
+            title: 'Note',
+            doneLabel: 'Done',
+            onChanged: (value) => last = value,
+          ),
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'hi');
+    expect(last, 'hi');
+  });
+
+  testWidgets('text input IME done submits the trimmed value', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? value;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              value = await showSafaehTextInput(
+                context: context,
+                title: 'Tag',
+                doneLabel: 'Done',
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '  hello  ');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(value, 'hello');
+  });
+
   testWidgets('option tile selected and disabled', (tester) async {
     var taps = 0;
     await tester.pumpWidget(
@@ -233,6 +380,16 @@ void main() {
     );
     final cs = Theme.of(tester.element(find.text('Selected'))).colorScheme;
     expect(selected.color, cs.primaryContainer);
+    expect(
+      tester.getSemantics(find.text('Selected')),
+      isSemantics(isButton: true, isSelected: true, isEnabled: true),
+    );
+    expect(
+      tester.getSemantics(find.text('Disabled')),
+      isSemantics(isButton: true, isEnabled: false),
+    );
+    expect(find.byIcon(Icons.check), findsNothing);
+    expect(find.byIcon(Icons.check_circle_rounded), findsNothing);
 
     await tester.tap(find.text('Disabled'));
     await tester.pump();
@@ -241,6 +398,35 @@ void main() {
     await tester.tap(find.text('Selected'));
     await tester.pump();
     expect(taps, 1);
+
+    final ink = tester.widget<InkWell>(
+      find
+          .ancestor(of: find.text('Selected'), matching: find.byType(InkWell))
+          .first,
+    );
+    expect(ink.canRequestFocus, isTrue);
+  });
+
+  testWidgets('option tile selectedFill overrides the container', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehOptionTile(
+            title: Text('Accent'),
+            selected: true,
+            selectedFill: Color(0xFFFF9800),
+          ),
+        ),
+      ),
+    );
+    final accent = tester.widget<Material>(
+      find
+          .ancestor(of: find.text('Accent'), matching: find.byType(Material))
+          .first,
+    );
+    expect(accent.color, const Color(0xFFFF9800));
   });
 
   testWidgets('dialog scrim dismiss pops null', (tester) async {
@@ -312,10 +498,39 @@ void main() {
     );
 
     expect(find.byIcon(Icons.home), findsOneWidget);
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('safaeh_fab_nav_0'))),
+      isSemantics(isButton: true, isSelected: true),
+    );
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.settings), findsOneWidget);
     expect(selected, 1);
+  });
+
+  testWidgets('floating nav destination labelBuilder is used', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehFloatingNavBar(
+            selectedIndex: 0,
+            onDestinationSelected: (_) {},
+            destinations: [
+              SafaehSidenavDestination(
+                label: 'Home',
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home,
+                labelBuilder: (data, style) =>
+                    Text('built-$data', style: style),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('built-Home'), findsOneWidget);
+    expect(find.text('Home'), findsNothing);
   });
 
   testWidgets('content band hides aside when narrow', (tester) async {
@@ -521,6 +736,46 @@ void main() {
     expect(find.text('Locked'), findsOneWidget);
   });
 
+  testWidgets('option picker body onSelected skips pop', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    int? tapped;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<int>(
+              context: context,
+              title: 'How to settle',
+              child: SafaehOptionPickerBody<int>(
+                selected: 1,
+                onSelected: (value) => tapped = value,
+                options: const [
+                  SafaehOption(
+                    value: 2,
+                    label: 'Pairs',
+                    subtitle: 'Per pair',
+                    icon: Icons.people_outline,
+                  ),
+                ],
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pairs'));
+    await tester.pump();
+    expect(tapped, 2);
+    expect(find.text('Pairs'), findsOneWidget);
+  });
+
   testWidgets('buildSafaehSheetShell shows title, body, and actions', (
     tester,
   ) async {
@@ -539,6 +794,51 @@ void main() {
     expect(find.text('Shell title'), findsOneWidget);
     expect(find.text('Shell body'), findsOneWidget);
     expect(find.text('OK'), findsOneWidget);
+    expect(find.byType(OverflowBar), findsOneWidget);
+  });
+
+  testWidgets('option tile and card picker consume theme radius', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const SafaehTheme(
+        data: SafaehThemeData(radius: 20),
+        child: MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                SafaehOptionTile(title: Text('Row')),
+                SafaehOptionPickerBody<int>(
+                  title: 'Pick',
+                  options: [
+                    SafaehOption(
+                      value: 1,
+                      label: 'Minimal',
+                      subtitle: 'Fewest',
+                      icon: Icons.bolt_outlined,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final tile = tester.widget<Material>(
+      find
+          .ancestor(of: find.text('Row'), matching: find.byType(Material))
+          .first,
+    );
+    expect(tile.borderRadius, BorderRadius.circular(20));
+
+    final card = tester.widget<Material>(
+      find
+          .ancestor(of: find.text('Minimal'), matching: find.byType(Material))
+          .first,
+    );
+    expect(card.borderRadius, BorderRadius.circular(20));
   });
 
   testWidgets('sidenav asDrawer shows title without expand control', (
@@ -568,6 +868,10 @@ void main() {
     expect(find.text('Groups'), findsOneWidget);
     expect(find.byKey(const ValueKey('safaeh_nav_rail')), findsNothing);
     expect(find.byKey(const ValueKey('safaeh_nav_expand')), findsNothing);
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('safaeh_nav_0'))),
+      isSemantics(isButton: true, isSelected: true),
+    );
   });
 
   testWidgets('option tile destructive uses error color', (tester) async {
@@ -590,6 +894,33 @@ void main() {
     );
     final cs = Theme.of(tester.element(find.text('Danger'))).colorScheme;
     expect(ink.data.color, cs.error);
+  });
+
+  testWidgets('directional icons flip in RTL', (tester) async {
+    late IconData end;
+    late IconData start;
+    late IconData back;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Builder(
+            builder: (context) {
+              end = safaehChevronEnd(context);
+              start = safaehChevronStart(context);
+              back = safaehArrowBack(context);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
+    );
+    expect(end, Icons.chevron_right);
+    expect(start, Icons.chevron_left);
+    expect(back, Icons.arrow_back);
+    expect(Icons.chevron_right.matchTextDirection, isTrue);
+    expect(Icons.chevron_left.matchTextDirection, isTrue);
+    expect(Icons.arrow_back.matchTextDirection, isTrue);
   });
 
   testWidgets('sidenav collapse chevron mirrors in RTL', (tester) async {
@@ -626,8 +957,311 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
-    expect(find.byIcon(Icons.chevron_left), findsNothing);
+    expect(find.byIcon(Icons.chevron_left), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right), findsNothing);
+
+    final ink = tester.widget<InkWell>(
+      find.byKey(const ValueKey('safaeh_nav_0')),
+    );
+    expect(ink.canRequestFocus, isTrue);
+  });
+
+  testWidgets('multi tile picker confirms a list', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    List<String>? chosen;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              chosen = await showSafaehMultiTilePicker<String>(
+                context: context,
+                title: 'Accounts',
+                confirmLabel: 'Apply',
+                selected: const ['cash'],
+                options: const [
+                  SafaehTileOption(value: 'cash', label: 'Cash'),
+                  SafaehTileOption(value: 'card', label: 'Card'),
+                ],
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Card'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('safaeh_multi_done')));
+    await tester.pumpAndSettle();
+    expect(chosen, ['cash', 'card']);
+  });
+
+  testWidgets('tile picker search filters rows', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehTilePickerBody<String>(
+            title: 'Accounts',
+            searchHint: 'Search',
+            searchEmptyLabel: 'No matches',
+            options: [
+              SafaehTileOption(value: 'cash', label: 'Cash'),
+              SafaehTileOption(value: 'card', label: 'Card'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Cash'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('safaeh_tile_search')),
+      'car',
+    );
+    await tester.pump();
+    expect(find.text('Card'), findsOneWidget);
+    expect(find.text('Cash'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('safaeh_tile_search')),
+      'zzz',
+    );
+    await tester.pump();
+    expect(find.text('No matches'), findsOneWidget);
+  });
+
+  testWidgets('tile search empty chrome falls back to the hint', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehTilePickerBody<String>(
+            title: 'Accounts',
+            searchHint: 'Search',
+            options: [
+              SafaehTileOption(value: 'cash', label: 'Cash'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('safaeh_tile_search')),
+      'zzz',
+    );
+    await tester.pump();
+    expect(find.byIcon(Icons.search_off), findsOneWidget);
+    expect(find.text('Search'), findsWidgets);
+    expect(find.text('Cash'), findsNothing);
+  });
+
+  testWidgets('tileBuilder stays visual; the body owns the tap', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? picked;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              picked = await showSafaehTilePicker<String>(
+                context: context,
+                title: 'Accounts',
+                options: const [
+                  SafaehTileOption(value: 'cash', label: 'Cash'),
+                  SafaehTileOption(value: 'card', label: 'Card'),
+                ],
+                tileBuilder: (context, opt, selected) => Text(opt.label),
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.ancestor(
+        of: find.text('Card'),
+        matching: find.byType(GestureDetector),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(picked, 'card');
+  });
+
+  testWidgets('tileBuilder multi-select still toggles on the body', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehTilePickerBody<String>(
+            title: 'Accounts',
+            multiSelect: true,
+            selectedValues: const ['cash'],
+            confirmLabel: 'Apply',
+            options: const [
+              SafaehTileOption(value: 'cash', label: 'Cash'),
+              SafaehTileOption(value: 'card', label: 'Card'),
+            ],
+            tileBuilder: (context, opt, selected) {
+              return Text('${opt.label}${selected ? ' *' : ''}');
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Cash *'), findsOneWidget);
+    expect(find.text('Card'), findsOneWidget);
+    await tester.tap(
+      find.ancestor(
+        of: find.text('Card'),
+        matching: find.byType(GestureDetector),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Card *'), findsOneWidget);
+  });
+
+  testWidgets('tile picker searchMatches overrides default filter', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehTilePickerBody<String>(
+            title: 'Accounts',
+            searchHint: 'Search',
+            searchMatches: (option, query) => option.value == query,
+            options: const [
+              SafaehTileOption(value: 'cash', label: 'Cash'),
+              SafaehTileOption(value: 'card', label: 'Card'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('safaeh_tile_search')),
+      'cash',
+    );
+    await tester.pump();
+    expect(find.text('Cash'), findsOneWidget);
+    expect(find.text('Card'), findsNothing);
+  });
+
+  testWidgets('tile picker selectedValues syncs by contents', (tester) async {
+    var selected = <String>['cash'];
+    late StateSetter setPageState;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            setPageState = setState;
+            return Scaffold(
+              body: SafaehTilePickerBody<String>(
+                multiSelect: true,
+                confirmLabel: 'Apply',
+                selectedValues: selected,
+                options: const [
+                  SafaehTileOption(value: 'cash', label: 'Cash'),
+                  SafaehTileOption(value: 'card', label: 'Card'),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    SafaehOptionTile tile(String label) {
+      return tester.widget<SafaehOptionTile>(
+        find.ancestor(
+          of: find.text(label),
+          matching: find.byType(SafaehOptionTile),
+        ),
+      );
+    }
+
+    expect(tile('Cash').selected, isTrue);
+    expect(tile('Card').selected, isFalse);
+
+    selected.add('card');
+    setPageState(() {});
+    await tester.pump();
+    expect(tile('Cash').selected, isTrue);
+    expect(tile('Card').selected, isTrue);
+
+    await tester.tap(find.text('Cash'));
+    await tester.pump();
+    expect(tile('Cash').selected, isFalse);
+
+    setPageState(() => selected = <String>['cash', 'card']);
+    await tester.pump();
+    expect(tile('Cash').selected, isFalse);
+    expect(tile('Card').selected, isTrue);
+
+    setPageState(() => selected = <String>['card']);
+    await tester.pump();
+    expect(tile('Cash').selected, isFalse);
+    expect(tile('Card').selected, isTrue);
+  });
+
+  testWidgets('status body shows a busy indicator', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehStatusBody(busy: true, message: Text('Loading')),
+        ),
+      ),
+    );
+    expect(find.text('Loading'), findsOneWidget);
+    expect(
+      tester
+          .widget<CircularProgressIndicator>(
+            find.byType(CircularProgressIndicator),
+          )
+          .value,
+      isNull,
+    );
+  });
+
+  testWidgets('status body honors determinate progress', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SafaehStatusBody(
+            busy: true,
+            progress: 0.4,
+            message: Text('Loading'),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester
+          .widget<CircularProgressIndicator>(
+            find.byType(CircularProgressIndicator),
+          )
+          .value,
+      0.4,
+    );
   });
 
   testWidgets('sidenav destination labelBuilder is used', (tester) async {
@@ -644,10 +1278,8 @@ void main() {
                 label: 'Groups',
                 icon: Icons.group_outlined,
                 selectedIcon: Icons.group,
-                labelBuilder: (data, style) => Text(
-                  'built-$data',
-                  style: style,
-                ),
+                labelBuilder: (data, style) =>
+                    Text('built-$data', style: style),
               ),
             ],
           ),
@@ -657,6 +1289,204 @@ void main() {
 
     expect(find.text('built-Groups'), findsOneWidget);
     expect(find.text('Groups'), findsNothing);
+  });
+
+  testWidgets('collapsed sidenav tooltip uses labelBuilder text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Row(
+            children: [
+              SafaehSidenav(
+                title: 'Menu',
+                collapsed: true,
+                onToggleCompact: () {},
+                selectedIndex: 0,
+                onDestinationSelected: (_) {},
+                destinations: [
+                  SafaehSidenavDestination(
+                    label: 'Groups',
+                    icon: Icons.group_outlined,
+                    selectedIcon: Icons.group,
+                    labelBuilder: (data, style) =>
+                        Text('built-$data', style: style),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is Tooltip && widget.message == 'built-Groups',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is Tooltip && widget.message == 'Groups',
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('sidenav profile defaults to a visible initials avatar', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    Future<void> pumpRail({
+      required bool collapsed,
+      required ThemeMode mode,
+      TextDirection direction = TextDirection.ltr,
+    }) {
+      return tester.pumpWidget(
+        MaterialApp(
+          themeMode: mode,
+          theme: ThemeData(colorSchemeSeed: const Color(0xFF6750A4)),
+          darkTheme: ThemeData(
+            colorSchemeSeed: const Color(0xFF6750A4),
+            brightness: Brightness.dark,
+          ),
+          home: Directionality(
+            textDirection: direction,
+            child: Scaffold(
+              body: Row(
+                children: [
+                  SafaehSidenav(
+                    title: 'Safaeh',
+                    collapsed: collapsed,
+                    onToggleCompact: _noop,
+                    selectedIndex: 0,
+                    onDestinationSelected: _noopIndex,
+                    destinations: const [
+                      SafaehSidenavDestination(
+                        label: 'Groups',
+                        icon: Icons.group_outlined,
+                        selectedIcon: Icons.group,
+                      ),
+                    ],
+                    profile: SafaehSidenavProfile(
+                      label: 'Ada Lovelace',
+                      subtitle: 'ada@example.com',
+                      onTap: _noop,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Future<void> expectVisibleAvatar() async {
+      final avatar = find.byKey(const ValueKey('safaeh_nav_profile_avatar'));
+      expect(avatar, findsOneWidget);
+      expect(find.text('AL'), findsOneWidget);
+      final size = tester.getSize(avatar);
+      expect(size.width, SafaehSidenavAvatar.defaultSize);
+      expect(size.height, SafaehSidenavAvatar.defaultSize);
+      final box = tester.widget<DecoratedBox>(
+        find.descendant(of: avatar, matching: find.byType(DecoratedBox)),
+      );
+      final cs = Theme.of(tester.element(avatar)).colorScheme;
+      expect((box.decoration as BoxDecoration).color, cs.primary);
+    }
+
+    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+      await pumpRail(collapsed: false, mode: mode);
+      await tester.pumpAndSettle();
+      await expectVisibleAvatar();
+
+      await pumpRail(collapsed: true, mode: mode);
+      await tester.pumpAndSettle();
+      await expectVisibleAvatar();
+    }
+
+    await pumpRail(
+      collapsed: false,
+      mode: ThemeMode.light,
+      direction: TextDirection.rtl,
+    );
+    await tester.pumpAndSettle();
+    await expectVisibleAvatar();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehSidenav(
+            asDrawer: true,
+            title: 'Menu',
+            selectedIndex: 0,
+            onDestinationSelected: _noopIndex,
+            destinations: const [
+              SafaehSidenavDestination(
+                label: 'Groups',
+                icon: Icons.group_outlined,
+                selectedIcon: Icons.group,
+              ),
+            ],
+            profile: SafaehSidenavProfile(label: 'Ada Lovelace', onTap: _noop),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await expectVisibleAvatar();
+  });
+
+  testWidgets('sidenav profile keeps a custom leading', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehSidenav(
+            asDrawer: true,
+            title: 'Menu',
+            selectedIndex: 0,
+            onDestinationSelected: _noopIndex,
+            destinations: const [
+              SafaehSidenavDestination(
+                label: 'Groups',
+                icon: Icons.group_outlined,
+                selectedIcon: Icons.group,
+              ),
+            ],
+            profile: SafaehSidenavProfile(
+              label: 'Ada Lovelace',
+              leading: const Icon(
+                Icons.face,
+                key: ValueKey('custom_profile_leading'),
+              ),
+              onTap: _noop,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey('custom_profile_leading')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('safaeh_nav_profile_avatar')),
+      findsNothing,
+    );
+    expect(find.text('AL'), findsNothing);
   });
 }
 

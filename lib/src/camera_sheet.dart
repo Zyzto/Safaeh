@@ -33,25 +33,48 @@ class SafaehCameraSheet {
 }
 
 /// Opens a black paper-roll sheet (receipt camera / QR scanner).
+///
+/// [barrierDismissible] gates scrim tap and system back. The framework
+/// route stays non-dismissible so [SafaehCameraSheet.interceptDismiss]
+/// still runs on those paths.
 Future<T?> showSafaehCameraSheet<T>({
   required BuildContext context,
   required SafaehCameraSheetBuilder builder,
   double? compactHeightFraction,
   Color panelColor = Colors.black,
+  Duration? motion,
+  Duration? roll,
+  Curve? enterCurve,
+  Curve? exitCurve,
+  double Function(BuildContext context)? railWidthOf,
+  bool barrierDismissible = true,
+  bool useRootNavigator = true,
+  String? handleExpandLabel,
+  String? handleCollapseLabel,
+  String? handleDismissLabel,
 }) {
   final tokens = SafaehTheme.of(context);
   return showGeneralDialog<T>(
     context: context,
-    useRootNavigator: true,
+    useRootNavigator: useRootNavigator,
     barrierDismissible: false,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.transparent,
-    transitionDuration: safaehResolvedMotion(context, tokens.sheetRoll),
+    transitionDuration: safaehResolvedMotion(context, roll ?? tokens.sheetRoll),
     pageBuilder: (ctx, animation, secondaryAnimation) {
       return SafaehCameraSheetHost(
         openAnimation: animation,
         compactHeightFraction: compactHeightFraction,
         panelColor: panelColor,
+        motion: motion,
+        enterCurve: enterCurve,
+        exitCurve: exitCurve,
+        railWidthOf: railWidthOf,
+        barrierDismissible: barrierDismissible,
+        useRootNavigator: useRootNavigator,
+        handleExpandLabel: handleExpandLabel,
+        handleCollapseLabel: handleCollapseLabel,
+        handleDismissLabel: handleDismissLabel,
         builder: builder,
       );
     },
@@ -70,6 +93,15 @@ class SafaehCameraSheetHost extends StatefulWidget {
     this.compactHeightFraction,
     this.panelColor = Colors.black,
     this.scrimColor,
+    this.motion,
+    this.enterCurve,
+    this.exitCurve,
+    this.railWidthOf,
+    this.barrierDismissible = true,
+    this.useRootNavigator = true,
+    this.handleExpandLabel,
+    this.handleCollapseLabel,
+    this.handleDismissLabel,
   });
 
   final SafaehCameraSheetBuilder builder;
@@ -81,6 +113,23 @@ class SafaehCameraSheetHost extends StatefulWidget {
   /// When null, uses [ColorScheme.scrim] at 45%. Pass [Colors.transparent] to
   /// keep tap-to-dismiss while a parent (e.g. a route [Scaffold]) paints the dim.
   final Color? scrimColor;
+  final Duration? motion;
+  final Curve? enterCurve;
+  final Curve? exitCurve;
+  final double Function(BuildContext context)? railWidthOf;
+
+  /// Scrim tap and, when opened via [showSafaehCameraSheet], system back.
+  final bool barrierDismissible;
+  final bool useRootNavigator;
+
+  /// Compact handle. Defaults to Material dismiss.
+  final String? handleExpandLabel;
+
+  /// Expanded handle. Defaults to Material dismiss.
+  final String? handleCollapseLabel;
+
+  /// Override for the Material dismiss fallback.
+  final String? handleDismissLabel;
 
   @override
   State<SafaehCameraSheetHost> createState() => _SafaehCameraSheetHostState();
@@ -114,8 +163,10 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
     super.dispose();
   }
 
-  Duration _chromeMotion(BuildContext context) =>
-      safaehResolvedMotion(context, SafaehTheme.of(context).motion);
+  Duration _chromeMotion(BuildContext context) => safaehResolvedMotion(
+    context,
+    widget.motion ?? SafaehTheme.of(context).motion,
+  );
 
   void _setExpanded(bool value) {
     if (_expanded == value && _drag.offset == 0) return;
@@ -125,10 +176,7 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
     });
   }
 
-  void _pop<T>([T? result]) {
-    final nav = Navigator.of(context, rootNavigator: true);
-    if (nav.canPop()) nav.pop(result);
-  }
+  void _pop<T>([T? result]) => safaehPop(context, result);
 
   Future<void> _dismiss() async {
     final intercept = _interceptDismiss;
@@ -162,13 +210,17 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
       case SheetHandleDragAction.dismiss:
         _drag.reset();
         _dragTick.value++;
-        unawaited(_dismiss());
+        if (widget.barrierDismissible) {
+          unawaited(_dismiss());
+        }
       case SheetHandleDragAction.none:
         _drag.reset();
         _dragTick.value++;
     }
   }
 
+  /// Theme-curved 0→1 progress for fade + full-height slide (same family as
+  /// phone `showSafaeh`). Embedded hosts stay at 1.
   double _rollProgress(SafaehThemeData tokens) {
     final animation = widget.openAnimation;
     if (animation == null) return 1;
@@ -182,7 +234,10 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = SafaehTheme.of(context);
+    final tokens = SafaehTheme.of(context).copyWith(
+      enterCurve: widget.enterCurve,
+      exitCurve: widget.exitCurve,
+    );
     final size = MediaQuery.sizeOf(context);
     final isWide = tokens.isWide(context);
     final duration = _chromeMotion(context);
@@ -191,14 +246,17 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
         widget.compactHeightFraction ?? tokens.cameraCompactHeightFraction;
     final compactH = size.height * fraction;
     final fullH = size.height;
-    final panelWidth = isWide ? size.width - 32 : size.width;
+    final railWidth = isWide ? (widget.railWidthOf?.call(context) ?? 0.0) : 0.0;
+    final panelWidth = isWide
+        ? (size.width - 32 - railWidth).clamp(0.0, double.infinity)
+        : size.width;
     final scrim =
         widget.scrimColor ??
         Theme.of(context).colorScheme.scrim.withValues(alpha: 0.45);
 
     Widget scrimLayer = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _dismiss,
+      onTap: widget.barrierDismissible ? _dismiss : null,
       child: ColoredBox(color: scrim),
     );
     final scrimOpacity = _scrimOpacity;
@@ -206,7 +264,11 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
       scrimLayer = FadeTransition(opacity: scrimOpacity, child: scrimLayer);
     }
 
-    return Material(
+    Widget host = SafaehTheme(
+      data: tokens,
+      child: SafaehNavigatorScope(
+      useRootNavigator: widget.useRootNavigator,
+      child: Material(
       type: MaterialType.transparency,
       child: SizedBox.expand(
         child: Stack(
@@ -217,8 +279,10 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
               duration: duration,
               curve: tokens.enterCurve,
               padding: isWide && !_expanded
-                  ? const EdgeInsets.symmetric(horizontal: 16)
-                  : EdgeInsets.zero,
+                  ? EdgeInsetsDirectional.only(start: 16 + railWidth, end: 16)
+                  : (isWide
+                        ? EdgeInsetsDirectional.only(start: railWidth)
+                        : EdgeInsets.zero),
               child: AnimatedBuilder(
                 animation: _roll,
                 builder: (context, child) {
@@ -238,24 +302,25 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
                       animation != null &&
                       (animation.status == AnimationStatus.forward ||
                           animation.status == AnimationStatus.reverse);
+                  final progress = _rollProgress(tokens);
                   return Align(
                     alignment: Alignment.bottomCenter,
                     child: Transform.translate(
-                      offset: Offset(0, _drag.translateY(expanded: _expanded)),
-                      child: AnimatedContainer(
-                        duration: rolling || _drag.offset != 0
-                            ? Duration.zero
-                            : duration,
-                        curve: tokens.enterCurve,
-                        width: panelWidth,
-                        height: panelH * _rollProgress(tokens),
-                        child: ClipRect(
-                          child: OverflowBox(
-                            alignment: Alignment.topCenter,
-                            maxHeight: panelH,
-                            minHeight: panelH,
-                            maxWidth: panelWidth,
-                            minWidth: panelWidth,
+                      offset: Offset(
+                        0,
+                        _drag.translateY(expanded: _expanded),
+                      ),
+                      child: Opacity(
+                        opacity: progress,
+                        child: FractionalTranslation(
+                          translation: Offset(0, 1 - progress),
+                          child: AnimatedContainer(
+                            duration: rolling || _drag.offset != 0
+                                ? Duration.zero
+                                : duration,
+                            curve: tokens.enterCurve,
+                            width: panelWidth,
+                            height: panelH,
                             child: SizedBox(
                               key: const ValueKey('safaeh_camera_panel'),
                               width: panelWidth,
@@ -272,6 +337,13 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
                                       expanded: _expanded,
                                       duration: duration,
                                       curve: tokens.enterCurve,
+                                      expandLabel: widget.handleExpandLabel,
+                                      collapseLabel:
+                                          widget.handleCollapseLabel,
+                                      dismissLabel: widget.handleDismissLabel,
+                                      onTap: widget.barrierDismissible
+                                          ? () => unawaited(_dismiss())
+                                          : null,
                                       onVerticalDragUpdate: _onDragUpdate,
                                       onVerticalDragEnd: _onHandleDragEnd,
                                       onVerticalDragCancel: () {
@@ -296,6 +368,18 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
           ],
         ),
       ),
+    ),
+    ),
+    );
+    // Only the dialog route: an embedded host must not steal the page back.
+    if (widget.openAnimation == null) return host;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (widget.barrierDismissible) unawaited(_dismiss());
+      },
+      child: host,
     );
   }
 }

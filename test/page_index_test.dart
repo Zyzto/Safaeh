@@ -33,9 +33,67 @@ void main() {
 
     expect(find.text('On this page'), findsOneWidget);
     expect(find.text('Alpha'), findsOneWidget);
+    expect(
+      tester.getSemantics(find.text('Alpha')),
+      isSemantics(isButton: true, isSelected: true),
+    );
     await tester.tap(find.text('Beta'));
     await tester.pump();
     expect(active, 'beta');
+  });
+
+  testWidgets('page index entry labelBuilder is used', (tester) async {
+    final alpha = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehPageIndex(
+            title: 'On this page',
+            activeId: 'alpha',
+            onSelect: (_) {},
+            entries: [
+              SafaehPageIndexEntry(
+                id: 'alpha',
+                label: 'Alpha',
+                key: alpha,
+                labelBuilder: (data, style) => Text(
+                  'built-$data',
+                  style: style,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('built-Alpha'), findsOneWidget);
+    expect(find.text('Alpha'), findsNothing);
+  });
+
+  testWidgets('page index entry icon is shown', (tester) async {
+    final alpha = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehPageIndex(
+            title: 'On this page',
+            activeId: 'alpha',
+            onSelect: (_) {},
+            entries: [
+              SafaehPageIndexEntry(
+                id: 'alpha',
+                label: 'Alpha',
+                key: alpha,
+                icon: Icons.tag,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.tag), findsOneWidget);
   });
 
   testWidgets('SafaehPageIndexOverlay opens the panel', (tester) async {
@@ -104,6 +162,61 @@ void main() {
     expect(find.text('section-z'), findsOneWidget);
     final after = tester.getTopLeft(find.text('section-z')).dy;
     expect(after, lessThan(before - 400));
+  });
+
+  testWidgets('scrollToPageSection does not move an outer scrollable', (
+    tester,
+  ) async {
+    final target = GlobalKey();
+    final outer = ScrollController();
+    final inner = ScrollController();
+    addTearDown(outer.dispose);
+    addTearDown(inner.dispose);
+
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ListView(
+            controller: outer,
+            children: [
+              const SizedBox(height: 400, child: Text('outer-top')),
+              SizedBox(
+                height: 280,
+                child: ListView(
+                  controller: inner,
+                  children: [
+                    const SizedBox(height: 200, child: Text('inner-a')),
+                    SizedBox(
+                      key: target,
+                      height: 200,
+                      child: const Text('inner-b'),
+                    ),
+                    const SizedBox(height: 200, child: Text('inner-c')),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 800, child: Text('outer-bottom')),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(outer.offset, 0);
+    expect(inner.offset, 0);
+    await scrollToPageSection(
+      target,
+      controller: inner,
+      ensureDuration: Duration.zero,
+    );
+    await tester.pump();
+    expect(outer.offset, 0);
+    expect(inner.offset, greaterThan(0));
   });
 
   testWidgets('safaehActivePageSectionId follows the viewport', (tester) async {

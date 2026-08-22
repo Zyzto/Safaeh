@@ -15,10 +15,10 @@
 </p>
 
 <p align="center">
+  <a href="https://pub.dev/packages/safaeh"><img alt="pub.dev" src="https://img.shields.io/pub/v/safaeh.svg?style=flat-square&label=pub.dev&color=8B6914" /></a>
   <a href="https://github.com/Zyzto/Safaeh"><img alt="repo" src="https://img.shields.io/badge/github-Zyzto%2FSafaeh-C0C0C0?style=flat-square" /></a>
   <img alt="flutter" src="https://img.shields.io/badge/Flutter-%3E%3D3.11-C0C0C0?style=flat-square&logo=flutter&logoColor=white" />
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MPL--2.0-8B6914?style=flat-square" /></a>
-  <img alt="status" src="https://img.shields.io/badge/publish-git%20tag-2E7D32?style=flat-square" />
 </p>
 
 <p align="center">
@@ -59,7 +59,7 @@
 
 **صفائح** هي طبقة الـ chrome هذه. حساب يغلّفها بـ <span dir="ltr"><code>UserText</code></span> وعرض الـ rail والصلاحيات وكاميرا / فك QR الحيّ.
 
-المستودع: <span dir="ltr"><a href="https://github.com/Zyzto/Safaeh">Zyzto/Safaeh</a></span>. غير منشورة على <span dir="ltr">pub.dev</span>. حساب هو التطبيق المرجعي.
+على <span dir="ltr">pub.dev</span>: <span dir="ltr"><a href="https://pub.dev/packages/safaeh"><code>safaeh</code></a></span> · المستودع: <span dir="ltr"><a href="https://github.com/Zyzto/Safaeh">Zyzto/Safaeh</a></span>. حساب هو التطبيق المرجعي.
 
 </div>
 
@@ -97,6 +97,12 @@
 
 </details>
 
+<div dir="rtl" lang="ar">
+
+مُلتقطة من كتالوج <span dir="ltr"><a href="example/"><code>example/</code></a></span> عبر <span dir="ltr"><code>cd example && flutter test test/screenshots_test.dart</code></span>.
+
+</div>
+
 ---
 
 <div dir="rtl" lang="ar">
@@ -105,7 +111,7 @@
 
 | المجال | ماذا تحصل |
 |--------|-----------|
-| **Sheets** | <span dir="ltr"><code>showSafaeh</code></span> يحوّل sheet الهاتف ↔ dialog الجهاز اللوحي؛ <span dir="ltr"><code>showSafaehPicker</code></span> / <span dir="ltr"><code>SafaehOption</code></span> (بطاقات، <span dir="ltr"><code>enabled</code></span>)؛ <span dir="ltr"><code>showSafaehTilePicker</code></span> / <span dir="ltr"><code>SafaehTileOption</code></span> (صفوف قائمة، <span dir="ltr"><code>header</code></span> / <span dir="ltr"><code>leading</code></span> / <span dir="ltr"><code>enabled</code></span>)؛ <span dir="ltr"><code>showSafaehConfirm</code></span>، <span dir="ltr"><code>showSafaehTextInput</code></span>، <span dir="ltr"><code>buildSafaehSheetShell</code></span>، <span dir="ltr"><code>SafaehOptionList</code></span>، <span dir="ltr"><code>SafaehOptionTile</code></span> |
+| **Sheets** | <span dir="ltr"><code>showSafaeh</code></span> يحوّل sheet الهاتف ↔ dialog الجهاز اللوحي؛ <span dir="ltr"><code>showSafaehPicker</code></span> / <span dir="ltr"><code>SafaehOption</code></span> (بطاقات، <span dir="ltr"><code>enabled</code></span>)؛ <span dir="ltr"><code>showSafaehTilePicker</code></span> / <span dir="ltr"><code>SafaehTileOption</code></span> (صفوف قائمة، بحث)؛ <span dir="ltr"><code>showSafaehMultiTilePicker</code></span> (اختيار متعدد)؛ <span dir="ltr"><code>showSafaehConfirm</code></span>، <span dir="ltr"><code>showSafaehTextInput</code></span>، <span dir="ltr"><code>SafaehStatusBody</code></span>، <span dir="ltr"><code>buildSafaehSheetShell</code></span>، <span dir="ltr"><code>SafaehOptionList</code></span>، <span dir="ltr"><code>SafaehOptionTile</code></span> |
 | **Dialog** | <span dir="ltr"><code>showSafaehDialog</code></span> لوحة متمركزة مع <span dir="ltr"><code>railWidthOf</code></span> اختياري |
 | **Theme** | <span dir="ltr"><code>SafaehTheme</code></span> / <span dir="ltr"><code>SafaehThemeData</code></span> لنقطة العرض والحركة ونصف القطر وعرض الـ rail وارتفاع الكاميرا المضغوط و<span dir="ltr"><code>contentMaxWidth</code></span>؛ <span dir="ltr"><code>copyWith</code></span> |
 | **Motion** | <span dir="ltr"><code>safaehResolvedMotion</code></span> يصفر المدد عندما تُعطَّل الحركات |
@@ -113,7 +119,8 @@
 | **Page index** | <span dir="ltr"><code>SafaehPageIndex</code></span> وoverlay و<span dir="ltr"><code>scrollToPageSection</code></span> و<span dir="ltr"><code>safaehActivePageSectionId</code></span> (معرفات + مفاتيح فقط — بلا <span dir="ltr"><code>.tr()</code></span> أثناء التمرير) |
 | **Content** | <span dir="ltr"><code>safaehBandMetrics</code></span>، <span dir="ltr"><code>SafaehContentBand</code></span>، <span dir="ltr"><code>SafaehEndAsideLayout</code></span>، <span dir="ltr"><code>SafaehContentAlignedAppBar</code></span>، <span dir="ltr"><code>SafaehContentAlignedFabLocation</code></span> |
 | **Camera** | <span dir="ltr"><code>showSafaehCameraSheet</code></span> / <span dir="ltr"><code>SafaehCameraSheetHost</code></span> لفة ورق مضغوط ↔ كامل |
-| **QR chrome** | <span dir="ltr"><code>SafaehQrScannerOverlay</code></span>، <span dir="ltr"><code>SafaehQrTopBar</code></span>، <span dir="ltr"><code>SafaehQrMessageBody</code></span>، <span dir="ltr"><code>SafaehQrFramePainter</code></span> |
+| **QR chrome** | <span dir="ltr"><code>SafaehQrScannerOverlay</code></span> (معاينة مضيف اختيارية)، <span dir="ltr"><code>SafaehQrTopBar</code></span>، <span dir="ltr"><code>SafaehQrMessageBody</code></span>، <span dir="ltr"><code>SafaehQrFramePainter</code></span> |
+| **RTL** | <span dir="ltr"><code>safaehChevronEnd</code></span>، <span dir="ltr"><code>safaehChevronStart</code></span>، <span dir="ltr"><code>safaehArrowBack</code></span> (رموز LTR؛ Material يعكسها عبر <span dir="ltr"><code>matchTextDirection</code></span>) |
 
 **Core:** Flutter Material فقط. المعاينة وفك الشفرة والنصوص والتوجيه تبقى في التطبيق المضيف.
 
@@ -125,7 +132,26 @@
 
 ## التثبيت
 
-وسم git (وليس <span dir="ltr"><code>main</code></span>):
+</div>
+
+```yaml
+dependencies:
+  safaeh: ^0.2.0
+```
+
+<div dir="rtl" lang="ar">
+
+أو:
+
+</div>
+
+```bash
+flutter pub add safaeh
+```
+
+<div dir="rtl" lang="ar">
+
+تثبيت بوسم Git (انظر <span dir="ltr"><a href="VERSIONING.md">VERSIONING.md</a></span>):
 
 </div>
 
@@ -134,7 +160,7 @@ dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.1.0
+      ref: v0.2.0
 ```
 
 ```dart
@@ -143,7 +169,7 @@ import 'package:safaeh/safaeh.dart';
 
 <div dir="rtl" lang="ar">
 
-الإصدار الحالي: **0.1.0**. انظر <span dir="ltr"><a href="CHANGELOG.md">CHANGELOG.md</a></span> و<span dir="ltr"><a href="VERSIONING.md">VERSIONING.md</a></span>. <span dir="ltr"><code>publish_to: none</code></span> — ليست على <span dir="ltr">pub.dev</span>.
+الإصدار الحالي: **0.2.0**.
 
 </div>
 
@@ -188,7 +214,7 @@ await showSafaeh<void>(
 
 <div dir="rtl" lang="ar">
 
-الهاتف: bottom sheet. الجهاز اللوحي+: dialog متمركز. نفس الـ route يتحوّل عندما يتجاوز العرض <span dir="ltr"><code>tabletBreakpoint</code></span>.
+الهاتف: bottom sheet. الجهاز اللوحي+: dialog متمركز. نفس الـ route يتحوّل عندما يتجاوز العرض <span dir="ltr"><code>tabletBreakpoint</code></span>. مرّر <span dir="ltr"><code>phonePlacement: SafaehPhoneSheetPlacement.center</code></span> لرفع ورقة الهاتف حتى يحاذي مركز أول محتوى مركز الشاشة (ما زالت ملامسة للأسفل).
 
 ### 3. Option picker
 
@@ -342,7 +368,7 @@ await showSafaehCameraSheet<void>(
 
 <div dir="rtl" lang="ar">
 
-ضمّنه في مسار عبر <span dir="ltr"><code>SafaehCameraSheetHost</code></span> (احذف <span dir="ltr"><code>openAnimation</code></span>، مرّر <span dir="ltr"><code>onDismiss</code></span>). غطِّ الماسح بـ <span dir="ltr"><code>SafaehQrScannerOverlay</code></span> — أبقِ <span dir="ltr"><code>mobile_scanner</code></span> في التطبيق.
+ضمّنه في مسار عبر <span dir="ltr"><code>SafaehCameraSheetHost</code></span> (احذف <span dir="ltr"><code>openAnimation</code></span>، مرّر <span dir="ltr"><code>onDismiss</code></span>). ضع <span dir="ltr"><code>SafaehQrScannerOverlay</code></span> / <span dir="ltr"><code>SafaehQrMessageBody</code></span> **داخل** اللوحة السفلية — هي تراكبات ملء، ليست ورقة مستقلة. أبقِ <span dir="ltr"><code>mobile_scanner</code></span> في التطبيق.
 
 </div>
 
@@ -370,7 +396,7 @@ await showSafaehCameraSheet<void>(
 
 ## جرد الـ UI
 
-**Sheets:** <span dir="ltr"><code>showSafaeh</code></span>، <span dir="ltr"><code>showSafaehPicker</code></span>، <span dir="ltr"><code>SafaehOption</code></span>، <span dir="ltr"><code>showSafaehTilePicker</code></span>، <span dir="ltr"><code>SafaehTileOption</code></span>، <span dir="ltr"><code>SafaehTilePickerBody</code></span>، <span dir="ltr"><code>SafaehTileBuilder</code></span>، <span dir="ltr"><code>showSafaehConfirm</code></span>، <span dir="ltr"><code>SafaehConfirmSheet</code></span>، <span dir="ltr"><code>showSafaehTextInput</code></span>، <span dir="ltr"><code>SafaehTextInputSheet</code></span>، <span dir="ltr"><code>buildSafaehSheetShell</code></span>، <span dir="ltr"><code>SafaehOptionList</code></span>، <span dir="ltr"><code>SafaehOptionTile</code></span>، <span dir="ltr"><code>kSheetContentPadding</code></span>، <span dir="ltr"><code>kSafaehSheetPadding</code></span>، <span dir="ltr"><code>SafaehTitleBuilder</code></span>، <span dir="ltr"><code>SafaehTransition</code></span>
+**Sheets:** <span dir="ltr"><code>showSafaeh</code></span>، <span dir="ltr"><code>SafaehRouteOptions</code></span>، <span dir="ltr"><code>showSafaehPicker</code></span>، <span dir="ltr"><code>SafaehOption</code></span>، <span dir="ltr"><code>SafaehOptionPickerBody</code></span>، <span dir="ltr"><code>showSafaehTilePicker</code></span>، <span dir="ltr"><code>showSafaehMultiTilePicker</code></span>، <span dir="ltr"><code>SafaehTileOption</code></span>، <span dir="ltr"><code>SafaehTilePickerBody</code></span>، <span dir="ltr"><code>SafaehTileBuilder</code></span>، <span dir="ltr"><code>showSafaehConfirm</code></span>، <span dir="ltr"><code>SafaehConfirmSheet</code></span>، <span dir="ltr"><code>showSafaehTextInput</code></span>، <span dir="ltr"><code>SafaehTextInputSheet</code></span>، <span dir="ltr"><code>SafaehStatusBody</code></span>، <span dir="ltr"><code>buildSafaehSheetShell</code></span>، <span dir="ltr"><code>SafaehOptionList</code></span>، <span dir="ltr"><code>SafaehOptionTile</code></span>، <span dir="ltr"><code>kSheetContentPadding</code></span>، <span dir="ltr"><code>kSafaehSheetPadding</code></span>، <span dir="ltr"><code>SafaehTitleBuilder</code></span>، <span dir="ltr"><code>SafaehLabelBuilder</code></span>، <span dir="ltr"><code>safaehTitleFromLabel</code></span>، <span dir="ltr"><code>safaehPop</code></span>، <span dir="ltr"><code>SafaehTransition</code></span>، <span dir="ltr"><code>safaehFadeScale</code></span>، <span dir="ltr"><code>safaehFade</code></span>، <span dir="ltr"><code>SafaehPhoneSheetPlacement</code></span>، <span dir="ltr"><code>safaehPhoneCenterSheetTop</code></span>
 
 **Dialog:** <span dir="ltr"><code>showSafaehDialog</code></span>
 
@@ -378,9 +404,11 @@ await showSafaehCameraSheet<void>(
 
 **QR:** <span dir="ltr"><code>SafaehQrScannerOverlay</code></span>، <span dir="ltr"><code>SafaehQrTopBar</code></span>، <span dir="ltr"><code>SafaehQrMessageBody</code></span>، <span dir="ltr"><code>SafaehQrFramePainter</code></span>
 
-**Shell:** <span dir="ltr"><code>SafaehSidenav</code></span>، <span dir="ltr"><code>SafaehSidenavDestination</code></span>، <span dir="ltr"><code>SafaehSidenavProfile</code></span>، <span dir="ltr"><code>SafaehFloatingNavBar</code></span>، <span dir="ltr"><code>SafaehPageIndex</code></span>، <span dir="ltr"><code>SafaehPageIndexOverlay</code></span>، <span dir="ltr"><code>scrollToPageSection</code></span>، <span dir="ltr"><code>safaehActivePageSectionId</code></span>، <span dir="ltr"><code>safaehBandMetrics</code></span>، <span dir="ltr"><code>SafaehContentBand</code></span>، <span dir="ltr"><code>SafaehEndAsideLayout</code></span>، <span dir="ltr"><code>SafaehContentAlignedAppBar</code></span>، <span dir="ltr"><code>SafaehContentAlignedFabLocation</code></span>
+**Shell:** <span dir="ltr"><code>SafaehSidenav</code></span>، <span dir="ltr"><code>SafaehSidenavDestination</code></span>، <span dir="ltr"><code>SafaehSidenavProfile</code></span>، <span dir="ltr"><code>SafaehSidenavAvatar</code></span>، <span dir="ltr"><code>SafaehFloatingNavBar</code></span>، <span dir="ltr"><code>SafaehPageIndex</code></span>، <span dir="ltr"><code>SafaehPageIndexOverlay</code></span>، <span dir="ltr"><code>scrollToPageSection</code></span>، <span dir="ltr"><code>safaehActivePageSectionId</code></span>، <span dir="ltr"><code>safaehBandMetrics</code></span>، <span dir="ltr"><code>SafaehContentBand</code></span>، <span dir="ltr"><code>SafaehEndAsideLayout</code></span>، <span dir="ltr"><code>SafaehContentAlignedAppBar</code></span>، <span dir="ltr"><code>SafaehContentAlignedFabLocation</code></span>
 
 **Tokens:** <span dir="ltr"><code>SafaehTheme</code></span>، <span dir="ltr"><code>SafaehThemeData</code></span>، <span dir="ltr"><code>SafaehThemeData.copyWith</code></span>، <span dir="ltr"><code>safaehResolvedMotion</code></span>، <span dir="ltr"><code>kSafaehCameraCompactHeightFraction</code></span>
+
+**RTL:** <span dir="ltr"><code>safaehChevronEnd</code></span>، <span dir="ltr"><code>safaehChevronStart</code></span>، <span dir="ltr"><code>safaehArrowBack</code></span>
 
 </div>
 
@@ -419,15 +447,19 @@ await showSafaehCameraSheet<void>(
 
 ## المثال
 
-كتالوج بلا Riverpod في <span dir="ltr"><a href="example/"><code>example/</code></a></span> — نفس تقسيم <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span>: <span dir="ltr"><code>catalog.dart</code></span> (نصوص EN/AR)، <span dir="ltr"><code>app.dart</code></span>، ومعرض عمودي لكل API عام. تبديل لغة وسمة، بلا <span dir="ltr"><code>mobile_scanner</code></span>.
+كتالوج بلا Riverpod في <span dir="ltr"><a href="example/"><code>example/</code></a></span> — نفس تقسيم <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span>: <span dir="ltr"><code>catalog.dart</code></span> (نصوص en / ar / ja / zh / es)، <span dir="ltr"><code>app.dart</code></span>، ومعرض عمودي في <span dir="ltr"><code>SafaehContentBand</code></span> لكل API عام. عناوين الأقسام تفتح العرض المستقل، والشاشات العريضة توزّع البطاقات على أعمدة في الصفحة نفسها. تبديل لغة وسمة، بلا <span dir="ltr"><code>mobile_scanner</code></span>.
 
 المثال على الويب: <span dir="ltr"><a href="https://zyzto.github.io/Safaeh/">zyzto.github.io/Safaeh</a></span>
 
+المثال بأسلوب package (web فقط في المستودع)؛ حلّل بـ:
+
 ```bash
-cd example && dart analyze && flutter test
+cd example && flutter pub get && dart analyze --fatal-infos && flutter test
 ```
 
 <span dir="ltr"><code>example/test/screenshots_test.dart</code></span> يكتب PNG إلى <span dir="ltr"><a href="screenshots/"><code>screenshots/</code></a></span>.
+
+للتشغيل على جهاز، ولّد platforms الأخرى أولاً (<span dir="ltr"><code>flutter create . --platforms=android,ios</code></span> داخل <span dir="ltr"><code>example/</code></span>). التفاصيل: <span dir="ltr"><a href="example/README.md">example/README.md</a></span>.
 
 حساب هو التطبيق المرجعي: <span dir="ltr"><code>lib/app.dart</code></span> يثبّت <span dir="ltr"><code>SafaehTheme</code></span>، و<span dir="ltr"><code>showResponsiveSheet</code></span> يغلّف <span dir="ltr"><code>showSafaeh</code></span>، وكاميرا الإيصال / ماسح الدعوة يغلّفان <span dir="ltr"><code>showSafaehCameraSheet</code></span>.
 
@@ -436,7 +468,7 @@ cd example && dart analyze && flutter test
 </div>
 
 ```bash
-dart analyze && flutter test
+dart analyze --fatal-infos && flutter test
 ```
 
 ---
@@ -453,10 +485,20 @@ dart analyze && flutter test
 
 <div dir="rtl" lang="ar">
 
+## Versioning
+
+انظر <span dir="ltr"><a href="VERSIONING.md">VERSIONING.md</a></span> و<span dir="ltr"><a href="CHANGELOG.md">CHANGELOG.md</a></span>. الوسوم بصيغة <span dir="ltr"><code>vX.Y.Z</code></span> ويجب أن تطابق <span dir="ltr"><code>pubspec.yaml</code></span>.
+
+</div>
+
+---
+
+<div dir="rtl" lang="ar">
+
 ## الرخصة
 
 <span dir="ltr"><a href="LICENSE">MPL-2.0</a></span> — weak copyleft، الاستخدام التجاري مسموح. ملفات الحزمة المعدّلة تبقى تحت MPL؛ تطبيقك يمكن أن يبقى closed-source.
 
-مستودع مستقل (<span dir="ltr"><code>publish_to: none</code></span>). حساب كعمل أكبر يبقى AGPL ويعتمد على وسم git.
+حساب كعمل أكبر يبقى AGPL ويمكنه الاعتماد على حزمة <span dir="ltr">pub.dev</span> أو وسم git.
 
 </div>

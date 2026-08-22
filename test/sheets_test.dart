@@ -166,6 +166,187 @@ void main() {
     expect(result, isNull);
   });
 
+  testWidgets('confirm barrierDismissible false keeps the sheet', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaehConfirm(
+              context: context,
+              title: 'Delete?',
+              content: 'Gone forever',
+              confirmLabel: 'Delete',
+              barrierDismissible: false,
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(200, 20));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_confirm')), findsOneWidget);
+  });
+
+  testWidgets('safaehTitleFromLabel wraps a label builder', (tester) async {
+    await setTablet(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              titleBuilder: safaehTitleFromLabel(
+                'Rename',
+                (data, style) => Text('built-$data', style: style),
+              ),
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('built-Rename'), findsOneWidget);
+  });
+
+  testWidgets('confirm dismissReturnsFalse pops false on tablet close', (
+    tester,
+  ) async {
+    await setTablet(tester);
+    bool? result = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              result = await showSafaehConfirm(
+                context: context,
+                title: 'Delete?',
+                content: 'Gone forever',
+                confirmLabel: 'Delete',
+                dismissReturnsFalse: true,
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+    expect(result, isFalse);
+  });
+
+  testWidgets('confirm dismissReturnsFalse pops false on system back', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    bool? result = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              result = await showSafaehConfirm(
+                context: context,
+                title: 'Delete?',
+                content: 'Gone forever',
+                confirmLabel: 'Delete',
+                dismissReturnsFalse: true,
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(result, isFalse);
+  });
+
+  testWidgets('phone drag handle exposes dismiss semantics', (tester) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final handle = tester.getSemantics(
+      find.byKey(const ValueKey('safaeh_drag_handle')),
+    );
+    expect(
+      handle,
+      matchesSemantics(
+        label: 'Dismiss',
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+    tester.semantics.tap(
+      find.semantics.byPredicate((node) => node.id == handle.id),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsNothing);
+  });
+
+  testWidgets('phone drag handle uses host dismissLabel', (tester) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              dismissLabel: 'Close sheet',
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('safaeh_drag_handle'))),
+      matchesSemantics(
+        label: 'Close sheet',
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+  });
+
   testWidgets('text input cancel pops null', (tester) async {
     await setPhone(tester);
     Object? value = 'pending';
@@ -235,6 +416,110 @@ void main() {
     await tester.pump();
     expect(value, isNull);
     expect(find.text('Locked'), findsOneWidget);
+  });
+
+  testWidgets('card picker pops the root navigator', (tester) async {
+    await setPhone(tester);
+    int? value;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Navigator(
+          onGenerateRoute: (settings) {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (context) {
+                return Scaffold(
+                  body: Column(
+                    children: [
+                      const Text('inner-home'),
+                      Builder(
+                        builder: (context) => TextButton(
+                          onPressed: () async {
+                            value = await showSafaehPicker<int>(
+                              context: context,
+                              title: 'How to settle',
+                              selected: 1,
+                              options: const [
+                                SafaehOption(
+                                  value: 2,
+                                  label: 'Pairs',
+                                  subtitle: 'Per pair',
+                                  icon: Icons.people_outline,
+                                ),
+                              ],
+                            );
+                          },
+                          child: const Text('open'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pairs'));
+    await tester.pumpAndSettle();
+    expect(value, 2);
+    expect(find.text('inner-home'), findsOneWidget);
+    expect(find.text('Pairs'), findsNothing);
+  });
+
+  testWidgets('tile picker pops the root navigator', (tester) async {
+    await setPhone(tester);
+    String? value;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Navigator(
+          onGenerateRoute: (settings) {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (context) {
+                return Scaffold(
+                  body: Column(
+                    children: [
+                      const Text('inner-home'),
+                      Builder(
+                        builder: (context) => TextButton(
+                          onPressed: () async {
+                            value = await showSafaehTilePicker<String>(
+                              context: context,
+                              title: 'Choose account',
+                              selected: 'cash',
+                              options: const [
+                                SafaehTileOption(
+                                  value: 'card',
+                                  label: 'Card',
+                                ),
+                              ],
+                            );
+                          },
+                          child: const Text('open'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Card'));
+    await tester.pumpAndSettle();
+    expect(value, 'card');
+    expect(find.text('inner-home'), findsOneWidget);
+    expect(find.text('Card'), findsNothing);
   });
 
   testWidgets('sidenav drawer shows labels and has no expand chevron', (
@@ -435,6 +720,368 @@ void main() {
     expect(withRail, closeTo(withoutRail + 40, 8));
   });
 
+  testWidgets('SafaehRouteOptions railWidthOf shifts the tablet dialog', (
+    tester,
+  ) async {
+    await setTablet(tester);
+    Future<double> openWithRail(double rail) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showSafaeh<void>(
+                context: context,
+                title: 'Rename',
+                route: SafaehRouteOptions(railWidthOf: (_) => rail),
+                child: const Text('sheet-body'),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      return tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dx;
+    }
+
+    final withRail = await openWithRail(80);
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+    final withoutRail = await openWithRail(0);
+    expect(withRail, closeTo(withoutRail + 40, 8));
+  });
+
+  testWidgets('showSafaehDialog railWidthOf shifts the panel', (tester) async {
+    await setTablet(tester);
+    Future<double> openWithRail(double rail) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showSafaehDialog<void>(
+                context: context,
+                railWidthOf: (_) => rail,
+                builder: (ctx) => const Material(
+                  child: SizedBox(
+                    width: 200,
+                    height: 120,
+                    child: Center(child: Text('dialog-body')),
+                  ),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      return tester.getTopLeft(find.text('dialog-body')).dx;
+    }
+
+    final withRail = await openWithRail(80);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    final withoutRail = await openWithRail(0);
+    expect(withRail, greaterThan(withoutRail));
+  });
+
+  testWidgets('tabletTopBarAction is shown next to close', (tester) async {
+    await setTablet(tester);
+    final extraFocus = FocusNode();
+    addTearDown(extraFocus.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              tabletTopBarAction: TextButton(
+                focusNode: extraFocus,
+                onPressed: () {},
+                child: const Text('extra-action'),
+              ),
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('extra-action'), findsOneWidget);
+    expect(find.byIcon(Icons.close), findsOneWidget);
+    final close = tester.widget<InkWell>(
+      find.ancestor(
+        of: find.byIcon(Icons.close),
+        matching: find.byType(InkWell),
+      ),
+    );
+    expect(close.canRequestFocus, isTrue);
+    extraFocus.requestFocus();
+    await tester.pump();
+    expect(extraFocus.hasFocus, isTrue);
+    expect(
+      tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close)).tooltip,
+      'Close',
+    );
+    expect(
+      tester.getSemantics(find.byIcon(Icons.close)),
+      isSemantics(isButton: true, isEnabled: true),
+    );
+  });
+
+  testWidgets('barrierDismissible false keeps the sheet on scrim tap', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              barrierDismissible: false,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(200, 20));
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsOneWidget);
+  });
+
+  testWidgets('showSafaeh system back dismisses when allowed', (tester) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsNothing);
+  });
+
+  testWidgets('barrierDismissible false keeps the sheet on system back', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              barrierDismissible: false,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsOneWidget);
+  });
+
+  testWidgets('barrierDismissible false keeps the sheet on handle dismiss', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              barrierDismissible: false,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('safaeh_drag_handle'))),
+      matchesSemantics(hasTapAction: false),
+    );
+    expect(find.text('sheet-body'), findsOneWidget);
+  });
+
+  testWidgets('showSafaehDialog fadeScale false still shows the child', (
+    tester,
+  ) async {
+    await setTablet(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaehDialog<void>(
+              context: context,
+              fadeScale: false,
+              builder: (ctx) => const Material(
+                child: SizedBox(
+                  width: 200,
+                  height: 120,
+                  child: Center(child: Text('dialog-body')),
+                ),
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('dialog-body'), findsOneWidget);
+  });
+
+  testWidgets('showSafaehDialog RouteOptions clamp maxWidth and maxHeight', (
+    tester,
+  ) async {
+    await setTablet(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaehDialog<void>(
+              context: context,
+              route: const SafaehRouteOptions(maxWidth: 120, maxHeight: 80),
+              builder: (ctx) => const Material(
+                child: SizedBox(
+                  width: 300,
+                  height: 200,
+                  child: Center(child: Text('dialog-body')),
+                ),
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final box = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('safaeh_dialog_constraints')),
+    );
+    expect(box.size.width, lessThanOrEqualTo(120));
+    expect(box.size.height, lessThanOrEqualTo(80));
+  });
+
+  testWidgets('useRootNavigator false pops the nested navigator', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    final innerKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Column(
+          children: [
+            const Text('root-shell'),
+            Expanded(
+              child: Navigator(
+                key: innerKey,
+                onGenerateRoute: (settings) {
+                  return MaterialPageRoute<void>(
+                    settings: settings,
+                    builder: (context) {
+                      return Scaffold(
+                        body: Column(
+                          children: [
+                            const Text('inner-home'),
+                            Builder(
+                              builder: (context) => TextButton(
+                                onPressed: () => showSafaeh<void>(
+                                  context: context,
+                                  title: 'Rename',
+                                  useRootNavigator: false,
+                                  child: const Text('sheet-body'),
+                                ),
+                                child: const Text('open'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(innerKey.currentState!.canPop(), isFalse);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsOneWidget);
+    expect(find.text('root-shell'), findsOneWidget);
+    expect(innerKey.currentState!.canPop(), isTrue);
+
+    innerKey.currentState!.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsNothing);
+    expect(find.text('inner-home'), findsOneWidget);
+    expect(find.text('root-shell'), findsOneWidget);
+    expect(innerKey.currentState!.canPop(), isFalse);
+  });
+
+  testWidgets('fadeScale override still shows a tablet dialog', (tester) async {
+    await setTablet(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              fadeScale: safaehFade,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsOneWidget);
+    expect(find.byKey(const ValueKey('safaeh_drag_handle')), findsNothing);
+  });
+
   testWidgets('railWidthOf in RTL shifts the tablet dialog off the start edge', (
     tester,
   ) async {
@@ -556,5 +1203,265 @@ void main() {
       ),
     );
     expect(ink.canRequestFocus, isTrue);
+  });
+
+  testWidgets('phone showSafaeh slides the panel up from below', (tester) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              child: const Padding(
+                padding: kSheetContentPadding,
+                child: Text('sheet-body'),
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    final startTop = tester
+        .getTopLeft(find.byKey(const ValueKey('safaeh_panel')))
+        .dy;
+    expect(startTop, greaterThan(400));
+
+    await tester.pump(const Duration(milliseconds: 80));
+    final midTop = tester
+        .getTopLeft(find.byKey(const ValueKey('safaeh_panel')))
+        .dy;
+    expect(midTop, lessThan(startTop));
+
+    await tester.pumpAndSettle();
+    final endTop = tester
+        .getTopLeft(find.byKey(const ValueKey('safaeh_panel')))
+        .dy;
+    expect(endTop, lessThan(midTop));
+    expect(find.text('sheet-body'), findsOneWidget);
+  });
+
+  test('center sheet top lines up first-content center to phone center', () {
+    const viewport = 800.0;
+    const handle = 24.0;
+    const first = 48.0;
+    final top = safaehPhoneCenterSheetTop(
+      viewportHeight: viewport,
+      handleHeight: handle,
+      firstContentHeight: first,
+    );
+    expect(top, closeTo(400 - handle - first / 2, 0.01));
+    expect(
+      safaehPhoneCenterSheetHeight(viewportHeight: viewport, sheetTop: top),
+      closeTo(viewport - top, 0.01),
+    );
+    expect(
+      safaehPhoneCenterSheetTop(
+        viewportHeight: viewport,
+        handleHeight: handle,
+        firstContentHeight: 2000,
+      ),
+      closeTo(kSafaehPhoneCenterMinTopInset, 0.01),
+    );
+  });
+
+  testWidgets('phone center placement stays docked and grows upward', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              phonePlacement: SafaehPhoneSheetPlacement.center,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_drag_handle')), findsOneWidget);
+    final panel = tester.getRect(find.byKey(const ValueKey('safaeh_panel')));
+    expect(panel.bottom, closeTo(800, 2));
+    expect(panel.height, greaterThan(400));
+    final first = tester.getRect(find.text('sheet-body'));
+    expect(
+      first.center.dy,
+      closeTo(400, 16),
+    );
+  });
+
+  testWidgets('phone center placement remasures when the viewport grows', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              phonePlacement: SafaehPhoneSheetPlacement.center,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final short = tester.getRect(find.byKey(const ValueKey('safaeh_panel')));
+    expect(short.bottom, closeTo(800, 2));
+
+    tester.view.physicalSize = const Size(400, 1200);
+    await tester.pumpAndSettle();
+    final tall = tester.getRect(find.byKey(const ValueKey('safaeh_panel')));
+    expect(tall.bottom, closeTo(1200, 2));
+    expect(tall.height, greaterThan(short.height));
+    expect(
+      tester.getRect(find.text('sheet-body')).center.dy,
+      closeTo(600, 16),
+    );
+  });
+
+  testWidgets('raw showSafaeh paints the title on phone', (tester) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('safaeh_panel')),
+        matching: find.text('Rename'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('enableDrag without a handle still dismisses on fling', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Rename',
+              showDragHandle: false,
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_drag_handle')), findsNothing);
+    await tester.fling(
+      find.byKey(const ValueKey('safaeh_panel')),
+      const Offset(0, 280),
+      1400,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('sheet-body'), findsNothing);
+  });
+
+  testWidgets('showSafaeh dismissValue is returned from the barrier', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    String? result;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              result = await showSafaeh<String>(
+                context: context,
+                title: 'Rename',
+                dismissValue: 'gone',
+                child: const Text('sheet-body'),
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(200, 20));
+    await tester.pumpAndSettle();
+    expect(result, 'gone');
+  });
+
+  testWidgets('showSafaehDialog uses theme size caps and SafeArea', (
+    tester,
+  ) async {
+    await setTablet(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaehDialog<void>(
+              context: context,
+              builder: (ctx) => const Material(
+                child: SizedBox(
+                  width: 2000,
+                  height: 2000,
+                  child: Center(child: Text('dialog-body')),
+                ),
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final box = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('safaeh_dialog_constraints')),
+    );
+    expect(box.size.width, lessThanOrEqualTo(560));
+    expect(box.size.height, lessThanOrEqualTo(800 * 0.85 + 0.5));
+    expect(
+      find.descendant(
+        of: find.byType(SafeArea),
+        matching: find.byKey(const ValueKey('safaeh_dialog_constraints')),
+      ),
+      findsOneWidget,
+    );
   });
 }

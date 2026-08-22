@@ -1,21 +1,30 @@
 # Safaeh example
 
-Bilingual vertical gallery of `package:safaeh` chrome (`example/lib/app.dart`,
-`catalog.dart`, `gallery.dart`, `pages.dart`). Every demo is on one scrolling
-page — no tap-to-open. EN/AR + light/dark toggles. No `mobile_scanner`,
-Riverpod, or `easy_localization`.
+Catalog of `package:safaeh` chrome in five Fukaha locales (en, ar, ja, zh,
+es) — `example/lib/app.dart`, `catalog.dart`, `gallery.dart`, `pages.dart`.
+The gallery sits in `SafaehContentBand`. Wide bands lay section cards in two
+or three columns on the same scrolling page. Section titles open the
+standalone demo (sheet, page, or camera host). Locale + light/dark toggles.
+No `mobile_scanner`, Riverpod, or `easy_localization`. Profile name/email
+go through catalog keys; emails stay LTR in Arabic via `catalogIsolateLabel`.
 
 Live: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
 
 `web/` is in-tree for GitHub Pages. Other platforms are not generated, so
 `flutter run` on a device needs `flutter create .` first.
 
-## Analyze & test
+## Analyze
 
 ```bash
 cd example
 flutter pub get
-dart analyze
+dart analyze --fatal-infos
+```
+
+## Tests and screenshots
+
+```bash
+cd example
 flutter test
 ```
 
@@ -42,12 +51,19 @@ flutter run
 ## What it shows
 
 1. **Adaptive sheet** — phone bottom sheet ↔ tablet dialog
-2. **Card picker** — `showSafaehPicker`
-3. **Tile picker** — `showSafaehTilePicker` + header / disabled row
-4. **Confirm / text input / sheet shell**
-5. **Sheet morph** — nested 400 and 900 previews
-6. **Sidenav** — rail and `asDrawer: true`
-7. **Page index** — side rail and overlay
-8. **Content-aligned chrome** — `safaehBandMetrics` + app bar + FAB
-9. **Camera host / QR overlay / QR message**
-10. **Language + theme toggles**
+2. **Card picker** — `SafaehOptionPickerBody` / `showSafaehPicker`
+3. **Tile picker** — `SafaehTilePickerBody` + header / disabled row
+4. **Multi picker** — search + `showSafaehMultiTilePicker`
+5. **Status body** — busy and empty `SafaehStatusBody`
+6. **Confirm / text input** — `SafaehConfirmSheet` / `SafaehTextInputSheet`
+7. **Sheet shell** — shared title, body, and action row
+8. **Sheet morph** — nested 320 and 420 previews
+9. **Option tiles** — selected / disabled / destructive
+10. **Dialog** — `showSafaehDialog` with theme radius and width
+11. **Sidenav** — rail and `asDrawer: true` temporary drawer
+12. **Floating nav** — `SafaehFloatingNavBar`
+13. **Page index** — side rail and overlay + scroll helper
+14. **Content band / end aside / aligned chrome** — `safaehBandMetrics`
+15. **Camera host / QR overlay / QR message** — QR chrome sits in the
+    camera bottom panel (`SafaehCameraSheetHost`)
+16. **Language + theme toggles**

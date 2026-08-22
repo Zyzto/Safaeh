@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'theme.dart';
 
@@ -9,12 +10,16 @@ class SafaehPageIndexEntry {
     required this.label,
     required this.key,
     this.icon,
+    this.labelBuilder,
   });
 
   final String id;
   final String label;
   final GlobalKey key;
   final IconData? icon;
+
+  /// Host bidi / i18n wrapper. Same shape as [SafaehSidenavDestination.labelBuilder].
+  final SafaehLabelBuilder? labelBuilder;
 }
 
 /// GitBook-style "On this page" index for wide layouts (side rail).
@@ -53,7 +58,6 @@ class SafaehPageIndex extends StatelessWidget {
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: cs.onSurfaceVariant,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
                 ),
               ),
               const SizedBox(height: 10),
@@ -135,10 +139,11 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
       return;
     }
     if (!_open && _anim.isDismissed) return;
-    _anim.reverse().whenComplete(() {
+    final closing = _anim.reverse();
+    setState(() {});
+    closing.whenComplete(() {
       if (mounted) setState(() => _open = false);
     });
-    setState(() {});
   }
 
   @override
@@ -203,10 +208,13 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
                       shadowColor: cs.shadow.withValues(alpha: 0.28),
                       color: cs.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(28),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(28),
-                        onTap: () => _setOpen(!showPanel),
-                        child: Container(
+                      child: Semantics(
+                        button: true,
+                        expanded: showPanel,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(28),
+                          onTap: () => _setOpen(!showPanel),
+                          child: Container(
                           constraints: const BoxConstraints(maxWidth: 220),
                           padding: const EdgeInsetsDirectional.fromSTEB(
                             12,
@@ -252,21 +260,21 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
                                             fontWeight: FontWeight.w800,
                                           ),
                                     ),
-                                    Text(
-                                      active.label,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    _entryLabel(
+                                      entry: active,
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: cs.onSurface,
                                             fontWeight: FontWeight.w600,
                                           ),
+                                      maxLines: 1,
                                     ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
+                        ),
                         ),
                       ),
                     ),
@@ -327,7 +335,6 @@ class _PopoverPanel extends StatelessWidget {
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: 0.7,
                       ),
                     ),
                   ),
@@ -370,47 +377,49 @@ class _IndexLink extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: dense ? 1 : 2),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: dense ? 8 : 10,
-              vertical: dense ? 10 : 7,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: BorderDirectional(
-                start: BorderSide(
-                  width: 2.5,
-                  color: selected ? cs.primary : Colors.transparent,
-                ),
+        child: Semantics(
+          button: true,
+          selected: selected,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: dense ? 8 : 10,
+                vertical: dense ? 10 : 7,
               ),
-              color: selected ? cs.primaryContainer : null,
-            ),
-            child: Row(
-              children: [
-                if (entry.icon != null) ...[
-                  Icon(
-                    entry.icon,
-                    size: 16,
-                    color: selected ? cs.primary : cs.onSurfaceVariant,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: BorderDirectional(
+                  start: BorderSide(
+                    width: 2.5,
+                    color: selected ? cs.primary : Colors.transparent,
                   ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: Text(
-                    entry.label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: selected ? cs.primary : cs.onSurface,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      height: 1.25,
+                ),
+                color: selected ? cs.primaryContainer : null,
+              ),
+              child: Row(
+                children: [
+                  if (entry.icon != null) ...[
+                    Icon(
+                      entry.icon,
+                      size: 16,
+                      color: selected ? cs.primary : cs.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: _entryLabel(
+                      entry: entry,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: selected ? cs.primary : cs.onSurface,
+                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                        height: 1.25,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -419,7 +428,25 @@ class _IndexLink extends StatelessWidget {
   }
 }
 
-/// Scroll helper: jump to a section key inside a scrollable ancestor.
+Widget _entryLabel({
+  required SafaehPageIndexEntry entry,
+  required TextStyle? style,
+  int maxLines = 2,
+}) {
+  return entry.labelBuilder?.call(entry.label, style) ??
+      Text(
+        entry.label,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      );
+}
+
+/// Scroll helper: jump to a section key inside **one** scrollable.
+///
+/// Uses [controller] when given, otherwise the nearest [Scrollable]. Does
+/// **not** call [Scrollable.ensureVisible] (that walks every ancestor
+/// viewport and would drag an outer catalog/list).
 Future<void> scrollToPageSection(
   GlobalKey key, {
   double alignment = 0.08,
@@ -427,48 +454,72 @@ Future<void> scrollToPageSection(
   double? knownOffset,
   Duration ensureDuration = const Duration(milliseconds: 280),
 }) async {
-  Future<bool> ensure() async {
+  Future<ScrollPosition?> resolvePosition() async {
+    if (controller != null && controller.hasClients) {
+      return controller.position;
+    }
+    final ctx = key.currentContext;
+    if (ctx == null) return null;
+    return Scrollable.maybeOf(ctx)?.position;
+  }
+
+  Future<bool> scrollNearest(ScrollPosition position) async {
     final ctx = key.currentContext;
     if (ctx == null) return false;
+    final box = ctx.findRenderObject();
+    if (box == null) return false;
+    final viewport = RenderAbstractViewport.maybeOf(box);
+    if (viewport == null) return false;
+    final target = viewport
+        .getOffsetToReveal(box, alignment)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
     final motion = safaehResolvedMotion(ctx, ensureDuration);
-    await Scrollable.ensureVisible(
-      ctx,
-      duration: motion,
-      curve: Curves.easeOutCubic,
-      alignment: alignment,
-    );
+    if ((target - position.pixels).abs() < 0.5) return true;
+    if (motion == Duration.zero) {
+      position.jumpTo(target);
+    } else {
+      await position.animateTo(
+        target,
+        duration: motion,
+        curve: Curves.easeOutCubic,
+      );
+    }
     return true;
   }
 
-  if (await ensure()) return;
+  var position = await resolvePosition();
+  if (position != null && key.currentContext != null) {
+    if (await scrollNearest(position)) return;
+  }
 
   final c = controller;
   if (c == null || !c.hasClients) return;
 
-  final max = c.position.maxScrollExtent;
-
   void jump(double offset) {
-    c.jumpTo(offset.clamp(0.0, max));
+    c.jumpTo(offset.clamp(0.0, c.position.maxScrollExtent));
   }
 
   if (knownOffset != null) {
     jump(knownOffset);
   } else {
     for (final frac in const [0.0, 0.3, 0.6, 1.0]) {
-      jump(max * frac);
+      jump(c.position.maxScrollExtent * frac);
       await WidgetsBinding.instance.endOfFrame;
       if (key.currentContext != null) break;
     }
   }
 
   await WidgetsBinding.instance.endOfFrame;
-  if (await ensure()) return;
+  position = await resolvePosition();
+  if (position != null && await scrollNearest(position)) return;
 
   for (final frac in const [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]) {
-    jump(max * frac);
+    jump(c.position.maxScrollExtent * frac);
     await WidgetsBinding.instance.endOfFrame;
     if (key.currentContext != null) {
-      await ensure();
+      position = await resolvePosition();
+      if (position != null) await scrollNearest(position);
       return;
     }
   }

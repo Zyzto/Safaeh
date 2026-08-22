@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'rtl.dart';
 import 'theme.dart';
 
 /// One shell destination in [SafaehSidenav].
@@ -16,7 +17,79 @@ class SafaehSidenavDestination {
   final IconData icon;
   final IconData selectedIcon;
   final Key? tileKey;
-  final Widget Function(String data, TextStyle? style)? labelBuilder;
+  final SafaehLabelBuilder? labelBuilder;
+}
+
+/// Initials for [SafaehSidenavAvatar]: first letters of the first two words,
+/// or the first character of a single token (CJK / one-word names).
+String safaehSidenavInitials(String label) {
+  final parts = label
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return '';
+  String first(String value) {
+    final ch = String.fromCharCode(value.runes.first);
+    // Latin-only fold. CJK / Arabic letters stay as written. Hosts that
+    // need Turkish İ / ı pass [SafaehSidenavAvatar.initials] or a custom
+    // [SafaehSidenavProfile.leading].
+    if (ch.codeUnitAt(0) < 0x80) return ch.toUpperCase();
+    return ch;
+  }
+
+  if (parts.length == 1) return first(parts[0]);
+  return first(parts[0]) + first(parts[1]);
+}
+
+/// Circular plate used as the default [SafaehSidenavProfile] leading.
+///
+/// [primary] / [ColorScheme.onPrimary] stays readable on the rail fill in
+/// light and dark. Pass [initials] to override [safaehSidenavInitials].
+class SafaehSidenavAvatar extends StatelessWidget {
+  const SafaehSidenavAvatar({
+    super.key,
+    this.label,
+    this.initials,
+    this.icon = Icons.person_rounded,
+    this.size = defaultSize,
+  });
+
+  static const double defaultSize = 36;
+
+  final String? label;
+  final String? initials;
+  final IconData icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final text = (initials ?? safaehSidenavInitials(label ?? '')).trim();
+    final fg = cs.onPrimary;
+    final child = text.isNotEmpty
+        ? Text(
+            text,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: fg,
+              fontWeight: FontWeight.w700,
+              height: 1,
+              fontSize: size * 0.38,
+            ),
+          )
+        : Icon(icon, color: fg, size: size * 0.55);
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
+          child: Center(child: child),
+        ),
+      ),
+    );
+  }
 }
 
 /// Profile / account row at the bottom of [SafaehSidenav].
@@ -34,12 +107,17 @@ class SafaehSidenavProfile {
 
   final String label;
   final String? subtitle;
+
+  /// Photo or custom mark. When omitted, the rail shows [SafaehSidenavAvatar]
+  /// with initials from [label] (or a person icon if [label] is blank).
   final Widget? leading;
   final Widget? trailing;
   final bool selected;
   final VoidCallback onTap;
   final Key? tileKey;
-  final Widget Function(String data, TextStyle? style)? labelBuilder;
+
+  /// Wraps both [label] and [subtitle] (isolate emails in LTR here).
+  final SafaehLabelBuilder? labelBuilder;
 }
 
 /// Temporary drawer (mid) or clipping rail (desktop). Collapse hides labels
@@ -136,7 +214,12 @@ class SafaehSidenav extends StatelessWidget {
               collapsed: !asDrawer && collapsed,
               fill: chrome.fill,
               onFill: chrome.onFill,
-              leading: profile!.leading,
+              leading:
+                  profile!.leading ??
+                  SafaehSidenavAvatar(
+                    key: const ValueKey('safaeh_nav_profile_avatar'),
+                    label: profile!.label,
+                  ),
               trailing: profile!.trailing,
               labelBuilder: profile!.labelBuilder,
               onTap: profile!.onTap,
@@ -207,7 +290,6 @@ class _Header extends StatelessWidget {
       style: theme.textTheme.titleMedium?.copyWith(
         color: onFill,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.2,
       ),
     );
 
@@ -231,11 +313,7 @@ class _Header extends StatelessWidget {
                 color: onFill,
                 onPressed: onToggleCompact,
                 icon: Icon(
-                  collapsed
-                      ? Icons.menu
-                      : Directionality.of(context) == TextDirection.rtl
-                      ? Icons.chevron_right
-                      : Icons.chevron_left,
+                  collapsed ? Icons.menu : safaehChevronStart(context),
                 ),
               ),
             ),
@@ -274,7 +352,7 @@ class _NavTile extends StatelessWidget {
   final Color fill;
   final Color onFill;
   final VoidCallback onTap;
-  final Widget Function(String data, TextStyle? style)? labelBuilder;
+  final SafaehLabelBuilder? labelBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -311,18 +389,29 @@ class _NavTile extends StatelessWidget {
         borderRadius: radius,
         child: InkWell(
           key: tileKey,
-          canRequestFocus: false,
           borderRadius: radius,
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final showTrailing =
-                    trailing != null && constraints.maxWidth >= 72;
-                return Row(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final mark = leading ?? Icon(icon, color: color);
+              // Compact rail (~72) and mid-expand frames: center the mark so a
+              // 36px profile plate does not overflow the 8+16 tile padding.
+              if (constraints.maxWidth < 88) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Center(child: mark),
+                );
+              }
+              final showTrailing =
+                  trailing != null && constraints.maxWidth >= 120;
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+                child: Row(
                   children: [
-                    leading ?? Icon(icon, color: color),
+                    mark,
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsetsDirectional.only(start: 12),
@@ -331,16 +420,43 @@ class _NavTile extends StatelessWidget {
                     ),
                     if (showTrailing) trailing!,
                   ],
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
 
-    if (collapsed) return Tooltip(message: label, child: tile);
-    return tile;
+    if (collapsed) {
+      final built = labelBuilder?.call(label, theme.textTheme.bodyMedium);
+      final plain = built is Text
+          ? (built.data ?? built.textSpan?.toPlainText())
+          : null;
+      if (built != null && (plain == null || plain.isEmpty)) {
+        return Semantics(
+          button: true,
+          selected: selected,
+          child: Tooltip(
+            richMessage: WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: built,
+            ),
+            child: tile,
+          ),
+        );
+      }
+      return Semantics(
+        button: true,
+        selected: selected,
+        child: Tooltip(message: plain ?? label, child: tile),
+      );
+    }
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: tile,
+    );
   }
 
   Widget _labelText({
@@ -356,7 +472,7 @@ class _NavTile extends StatelessWidget {
               color: color,
               fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
             );
-    if (!isSubtitle && labelBuilder != null) {
+    if (labelBuilder != null) {
       return labelBuilder!(data, style);
     }
     return Text(

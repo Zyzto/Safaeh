@@ -12,11 +12,9 @@ Future<void> pumpExampleApp(
   WidgetTester tester, {
   String language = 'en',
   ThemeMode themeMode = ThemeMode.light,
+  Size size = screenshotSize,
 }) async {
-  tester.view.physicalSize = Size(
-    screenshotSize.width * 2,
-    screenshotSize.height * 2,
-  );
+  tester.view.physicalSize = Size(size.width * 2, size.height * 2);
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);

@@ -6,6 +6,9 @@ import 'theme.dart';
 
 /// Overlay chrome for a camera QR preview: viewfinder, success wash, top bar,
 /// optional hint. Preview and decode stay in the host app.
+///
+/// This widget is full-bleed. Host it in `showSafaehCameraSheet` /
+/// `SafaehCameraSheetHost` so the chrome sits in the paper-roll bottom panel.
 class SafaehQrScannerOverlay extends StatelessWidget {
   const SafaehQrScannerOverlay({
     super.key,
@@ -17,6 +20,7 @@ class SafaehQrScannerOverlay extends StatelessWidget {
     this.success = false,
     this.hint,
     this.torch,
+    this.preview,
     this.expandTooltip,
     this.collapseTooltip,
     this.motion,
@@ -28,6 +32,10 @@ class SafaehQrScannerOverlay extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback onToggleExpanded;
   final bool success;
+
+  /// Host camera / mock feed, painted behind the dimmed viewfinder.
+  /// Chrome only — decode and plugins stay in the host.
+  final Widget? preview;
   final Widget? hint;
   final Widget? torch;
   final String? expandTooltip;
@@ -40,9 +48,13 @@ class SafaehQrScannerOverlay extends StatelessWidget {
       context,
       motion ?? SafaehTheme.of(context).motion,
     );
+    final cs = Theme.of(context).colorScheme;
+    final successColor = cs.tertiary;
     return Stack(
       fit: StackFit.expand,
       children: [
+        if (preview != null)
+          Positioned.fill(child: IgnorePointer(child: preview)),
         IgnorePointer(
           child: RepaintBoundary(
             child: AnimatedBuilder(
@@ -52,6 +64,7 @@ class SafaehQrScannerOverlay extends StatelessWidget {
                   painter: SafaehQrFramePainter(
                     scanT: scanLine.value,
                     success: success,
+                    accent: success ? successColor : Colors.white,
                   ),
                   child: const SizedBox.expand(),
                 );
@@ -60,8 +73,10 @@ class SafaehQrScannerOverlay extends StatelessWidget {
           ),
         ),
         if (success)
-          const Positioned.fill(
-            child: IgnorePointer(child: ColoredBox(color: Color(0x5943A047))),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(color: successColor.withValues(alpha: 0.35)),
+            ),
           ),
         Column(
           children: [
@@ -165,6 +180,7 @@ class SafaehQrMessageBody extends StatelessWidget {
     this.iconSize = 64,
     this.action,
     this.onClose,
+    this.closeTooltip,
     this.padding = const EdgeInsets.all(24),
     this.safeArea = true,
   });
@@ -175,6 +191,9 @@ class SafaehQrMessageBody extends StatelessWidget {
   final double iconSize;
   final Widget? action;
   final VoidCallback? onClose;
+
+  /// Defaults to [MaterialLocalizations.closeButtonTooltip].
+  final String? closeTooltip;
   final EdgeInsetsGeometry padding;
   final bool safeArea;
 
@@ -188,20 +207,35 @@ class SafaehQrMessageBody extends StatelessWidget {
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: IconButton(
+                tooltip:
+                    closeTooltip ??
+                    MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: onClose,
                 icon: const Icon(Icons.close, color: Colors.white),
               ),
             ),
-          const Spacer(),
-          Icon(
-            icon,
-            size: iconSize,
-            color: iconColor ?? Colors.white.withValues(alpha: 0.85),
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      size: iconSize,
+                      color: iconColor ?? Colors.white.withValues(alpha: 0.85),
+                    ),
+                    const SizedBox(height: 20),
+                    message,
+                    if (action != null) ...[
+                      const SizedBox(height: 24),
+                      action!,
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 20),
-          message,
-          if (action != null) ...[const SizedBox(height: 24), action!],
-          const Spacer(),
         ],
       ),
     );
@@ -212,12 +246,17 @@ class SafaehQrMessageBody extends StatelessWidget {
 
 /// Dimmed viewfinder with corner brackets and a scanning line.
 class SafaehQrFramePainter extends CustomPainter {
-  SafaehQrFramePainter({required this.scanT, required this.success});
+  SafaehQrFramePainter({
+    required this.scanT,
+    required this.success,
+    this.accent,
+  });
 
   static final _dimPaint = Paint()..color = const Color(0x8C000000);
 
   final double scanT;
   final bool success;
+  final Color? accent;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -235,7 +274,7 @@ class SafaehQrFramePainter extends CustomPainter {
       ..fillType = PathFillType.evenOdd;
     canvas.drawPath(dim, _dimPaint);
 
-    final accent = success ? const Color(0xFF66BB6A) : Colors.white;
+    final accent = this.accent ?? (success ? const Color(0xFF66BB6A) : Colors.white);
     final cornerPaint = Paint()
       ..color = accent.withValues(alpha: 0.95)
       ..style = PaintingStyle.stroke
@@ -272,5 +311,7 @@ class SafaehQrFramePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant SafaehQrFramePainter oldDelegate) =>
-      oldDelegate.scanT != scanT || oldDelegate.success != success;
+      oldDelegate.scanT != scanT ||
+      oldDelegate.success != success ||
+      oldDelegate.accent != accent;
 }

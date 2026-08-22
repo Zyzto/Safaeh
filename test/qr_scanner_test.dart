@@ -29,6 +29,30 @@ void main() {
     expect(find.byIcon(Icons.open_in_full), findsOneWidget);
   });
 
+  testWidgets('QR overlay paints a host preview behind the frame', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehQrScannerOverlay(
+            preview: const ColoredBox(
+              key: ValueKey('qr_preview'),
+              color: Color(0xFF336699),
+            ),
+            scanLine: const AlwaysStoppedAnimation<double>(0.4),
+            title: const Text('Scan'),
+            expanded: false,
+            onClose: () {},
+            onToggleExpanded: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('qr_preview')), findsOneWidget);
+  });
+
   testWidgets('QR message body shows action and close', (tester) async {
     var closed = false;
     await tester.pumpWidget(
@@ -46,6 +70,10 @@ void main() {
 
     expect(find.text('Need camera'), findsOneWidget);
     expect(find.text('Open settings'), findsOneWidget);
+    expect(
+      tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close)).tooltip,
+      'Close',
+    );
     await tester.tap(find.byIcon(Icons.close));
     expect(closed, isTrue);
   });

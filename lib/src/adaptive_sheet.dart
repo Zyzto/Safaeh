@@ -1,12 +1,19 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'sheet_handle_drag.dart';
+import 'sheet_shell.dart';
 import 'theme.dart';
 
 /// Default inset for free-form sheet bodies.
-const EdgeInsets kSheetContentPadding = EdgeInsets.fromLTRB(20, 16, 20, 20);
+const EdgeInsets kSheetContentPadding = EdgeInsets.fromLTRB(
+  kSafaehSheetPadding,
+  16,
+  kSafaehSheetPadding,
+  kSafaehSheetPadding,
+);
 
 /// Builds a wide-dialog entrance (fade + scale).
 typedef SafaehTransition =
@@ -18,6 +25,126 @@ typedef SafaehTransition =
 /// Optional title widget (e.g. bidi-aware [Text] from the host app).
 typedef SafaehTitleBuilder =
     Widget Function(BuildContext context, TextStyle? style);
+
+/// Reuses a [SafaehLabelBuilder] on a sheet title.
+SafaehTitleBuilder safaehTitleFromLabel(
+  String data,
+  SafaehLabelBuilder builder,
+) {
+  return (context, style) => builder(data, style);
+}
+
+/// Shared size / motion / navigator knobs for [showSafaeh] and wrappers.
+///
+/// Nullable fields fill in when the matching named argument is omitted.
+/// [barrierDismissible], [useRootNavigator], and [phonePlacement] use the bag
+/// when non-null (function defaults cannot be told from an explicit pass).
+///
+/// [showSafaehDialog] reads rail / motion / barrier / navigator / fade /
+/// [maxWidth] / [maxHeight]. [slideUp], [phonePlacement], and
+/// [tabletBreakpoint] do not apply (the route stays a centered dialog).
+class SafaehRouteOptions {
+  const SafaehRouteOptions({
+    this.railWidthOf,
+    this.tabletBreakpoint,
+    this.maxWidth,
+    this.maxHeight,
+    this.barrierDismissible,
+    this.motion,
+    this.enterCurve,
+    this.exitCurve,
+    this.fadeScale,
+    this.slideUp,
+    this.phonePlacement,
+    this.useRootNavigator,
+    this.dismissLabel,
+    this.closeTooltip,
+  });
+
+  final double Function(BuildContext context)? railWidthOf;
+  final double? tabletBreakpoint;
+  final double? maxWidth;
+  final double? maxHeight;
+  final bool? barrierDismissible;
+  final Duration? motion;
+  final Curve? enterCurve;
+  final Curve? exitCurve;
+  final SafaehTransition? fadeScale;
+  final SafaehTransition? slideUp;
+  final SafaehPhoneSheetPlacement? phonePlacement;
+  final bool? useRootNavigator;
+
+  /// Phone drag-handle label. Defaults to Material “Dismiss”.
+  final String? dismissLabel;
+
+  /// Tablet header close. Defaults to Material close tooltip.
+  final String? closeTooltip;
+}
+
+/// Where a phone sheet sits. Tablet+ dialogs stay centered.
+enum SafaehPhoneSheetPlacement {
+  /// Compact sheet docked to the bottom (default).
+  bottom,
+
+  /// Taller bottom-docked sheet: the vertical center of the first body
+  /// block after the handle aligns with the vertical center of the phone.
+  center,
+}
+
+/// Fraction of the first body block that lines up with the viewport center
+/// (`1 / 2` = center-to-center).
+const double kSafaehPhoneCenterFirstContentAnchor = 1 / 2;
+
+/// Smallest gap allowed above a raised phone sheet.
+const double kSafaehPhoneCenterMinTopInset = 8;
+
+/// Handle height used before the first layout measurement.
+const double kSafaehPhoneHandleFallbackHeight = 24;
+
+/// First-content height used before the first layout measurement.
+const double kSafaehPhoneFirstContentFallbackHeight = 48;
+
+/// Top of a bottom-docked raised sheet.
+///
+/// ```
+/// targetCenterY = viewportHeight / 2
+/// sheetTop = targetCenterY - handleHeight - (firstContentHeight / 2)
+/// ```
+///
+/// Clamped so the sheet never sits above [minTopInset] or shorter than
+/// [minSheetHeight], and never taller than [maxSheetHeight]. The sheet
+/// stays flush with the bottom: `sheetHeight = viewportHeight - sheetTop`.
+///
+/// Advanced: hosts should pass [SafaehPhoneSheetPlacement.center] on
+/// [showSafaeh] instead of calling this directly.
+double safaehPhoneCenterSheetTop({
+  required double viewportHeight,
+  required double handleHeight,
+  required double firstContentHeight,
+  double minTopInset = kSafaehPhoneCenterMinTopInset,
+  double minSheetHeight = 0,
+  double maxSheetHeight = double.infinity,
+}) {
+  final targetCenterY = viewportHeight / 2;
+  final rawTop =
+      targetCenterY -
+      handleHeight -
+      firstContentHeight * kSafaehPhoneCenterFirstContentAnchor;
+  final minTop = math.max(
+    minTopInset,
+    viewportHeight - math.min(maxSheetHeight, viewportHeight),
+  );
+  final maxTop = viewportHeight - minSheetHeight;
+  return rawTop.clamp(minTop, math.max(minTop, maxTop));
+}
+
+/// Height of a bottom-flush raised sheet for a computed [sheetTop].
+double safaehPhoneCenterSheetHeight({
+  required double viewportHeight,
+  required double sheetTop,
+}) {
+  return math.max(0.0, viewportHeight - sheetTop);
+}
 
 /// Shows [child] as a centered dialog on tablet+ and a bottom sheet on phone.
 ///
@@ -40,18 +167,42 @@ Future<T?> showSafaeh<T>({
   double? dialogMaxWidth,
   Duration? motion,
   Curve? enterCurve,
+  Curve? exitCurve,
   double Function(BuildContext context)? railWidthOf,
   SafaehTransition? fadeScale,
   SafaehTransition? slideUp,
+  SafaehPhoneSheetPlacement phonePlacement = SafaehPhoneSheetPlacement.bottom,
+  T? dismissValue,
+  bool useRootNavigator = true,
+  String? dismissLabel,
+  String? closeTooltip,
+  bool paintPhoneTitle = true,
+  SafaehRouteOptions? route,
 }) {
   final tokens = SafaehTheme.of(context);
-  final resolvedMotion = safaehResolvedMotion(context, motion ?? tokens.motion);
+  final resolvedRail = railWidthOf ?? route?.railWidthOf;
+  final resolvedMaxWidth = maxWidth ?? route?.maxWidth;
+  final resolvedMaxHeight = maxHeight ?? route?.maxHeight;
+  final resolvedBarrier = route?.barrierDismissible ?? barrierDismissible;
+  final resolvedMotion = safaehResolvedMotion(
+    context,
+    motion ?? route?.motion ?? tokens.motion,
+  );
+  final resolvedEnter = enterCurve ?? route?.enterCurve ?? tokens.enterCurve;
+  final resolvedExit = exitCurve ?? route?.exitCurve ?? tokens.exitCurve;
+  final resolvedFade = fadeScale ?? route?.fadeScale;
+  final resolvedSlide = slideUp ?? route?.slideUp;
+  final resolvedPlacement = route?.phonePlacement ?? phonePlacement;
+  final resolvedRoot = route?.useRootNavigator ?? useRootNavigator;
+  final resolvedBreakpoint = tabletBreakpoint ?? route?.tabletBreakpoint;
+  final resolvedDismissLabel = dismissLabel ?? route?.dismissLabel;
+  final resolvedCloseTooltip = closeTooltip ?? route?.closeTooltip;
   final theme = Theme.of(context);
 
   return showGeneralDialog<T>(
     context: context,
-    useRootNavigator: true,
-    barrierDismissible: barrierDismissible,
+    useRootNavigator: resolvedRoot,
+    barrierDismissible: resolvedBarrier,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: theme.colorScheme.scrim.withValues(alpha: 0.32),
     transitionDuration: resolvedMotion,
@@ -60,28 +211,280 @@ Future<T?> showSafaeh<T>({
         title: title,
         titleBuilder: titleBuilder,
         tabletTopBarAction: tabletTopBarAction,
-        maxWidth: maxWidth,
-        maxHeight: maxHeight,
+        maxWidth: resolvedMaxWidth,
+        maxHeight: resolvedMaxHeight,
         useSafeArea: useSafeArea,
         showDragHandle: showDragHandle,
         enableDrag: enableDrag,
         sheetShape: sheetShape,
-        barrierDismissible: barrierDismissible,
+        barrierDismissible: resolvedBarrier,
         openAnimation: animation,
         contentPadding: contentPadding,
-        tabletBreakpoint: tabletBreakpoint ?? tokens.tabletBreakpoint,
+        tabletBreakpoint: resolvedBreakpoint ?? tokens.tabletBreakpoint,
         dialogMaxWidth: dialogMaxWidth ?? tokens.dialogMaxWidth,
         motion: resolvedMotion,
-        enterCurve: enterCurve ?? tokens.enterCurve,
+        enterCurve: resolvedEnter,
+        exitCurve: resolvedExit,
         radius: tokens.radius,
-        railWidthOf: railWidthOf,
-        fadeScale: fadeScale,
-        slideUp: slideUp,
+        railWidthOf: resolvedRail,
+        fadeScale: resolvedFade,
+        slideUp: resolvedSlide,
+        phonePlacement: resolvedPlacement,
+        dismissValue: dismissValue,
+        useRootNavigator: resolvedRoot,
+        dismissLabel: resolvedDismissLabel,
+        closeTooltip: resolvedCloseTooltip,
+        paintPhoneTitle: paintPhoneTitle,
         child: child,
       );
     },
     transitionBuilder: (ctx, animation, secondaryAnimation, child) => child,
   );
+}
+
+/// Grows a bottom-docked phone sheet so the vertical center of the first
+/// body block after the handle aligns with the vertical center of the
+/// viewport. Pass-through when [enabled] is false.
+///
+/// Advanced: used by [showSafaeh] when [SafaehPhoneSheetPlacement.center]
+/// is set, and by the example catalog. Hosts should not mount this themselves.
+class SafaehPhoneCenterExtent extends StatefulWidget {
+  const SafaehPhoneCenterExtent({
+    super.key,
+    required this.child,
+    this.enabled = true,
+    this.maxHeightFactor = 0.92,
+  });
+
+  final Widget child;
+  final bool enabled;
+  final double maxHeightFactor;
+
+  @override
+  State<SafaehPhoneCenterExtent> createState() =>
+      _SafaehPhoneCenterExtentState();
+}
+
+class _SafaehPhoneCenterExtentState extends State<SafaehPhoneCenterExtent> {
+  final GlobalKey _childKey = GlobalKey();
+  double? _minHeight;
+  double _measuredViewportH = 0;
+
+  @override
+  void didUpdateWidget(covariant SafaehPhoneCenterExtent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.enabled) {
+      if (_minHeight != null || _measuredViewportH != 0) {
+        setState(() {
+          _minHeight = null;
+          _measuredViewportH = 0;
+        });
+      }
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback(_measureFromContext);
+  }
+
+  void _measureFromContext(Duration _) {
+    if (!mounted) return;
+    _applyMeasure(_viewportHeightOf(context));
+  }
+
+  void _applyMeasure(double viewportH) {
+    if (!mounted || !widget.enabled) return;
+    final box = _childKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    if (viewportH <= 0) return;
+
+    final metrics = _safaehPhoneCenterMetricsOf(box);
+    final handleH =
+        metrics?.handleHeight ?? kSafaehPhoneHandleFallbackHeight;
+    final firstH =
+        metrics?.firstContentHeight ?? kSafaehPhoneFirstContentFallbackHeight;
+    final compactH = metrics?.compactHeight ?? 0;
+    final top = safaehPhoneCenterSheetTop(
+      viewportHeight: viewportH,
+      handleHeight: handleH,
+      firstContentHeight: firstH,
+      minSheetHeight: compactH,
+      maxSheetHeight: viewportH * widget.maxHeightFactor,
+    );
+    final next = safaehPhoneCenterSheetHeight(
+      viewportHeight: viewportH,
+      sheetTop: top,
+    );
+    if (_minHeight != null &&
+        (_minHeight! - next).abs() <= 0.5 &&
+        (_measuredViewportH - viewportH).abs() <= 0.5) {
+      return;
+    }
+    setState(() {
+      _minHeight = next;
+      _measuredViewportH = viewportH;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled) return widget.child;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportH = constraints.maxHeight.isFinite && constraints.maxHeight > 0
+            ? constraints.maxHeight
+            : MediaQuery.sizeOf(context).height;
+        if ((viewportH - _measuredViewportH).abs() > 0.5) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _applyMeasure(viewportH);
+          });
+        }
+        final fallbackTop = safaehPhoneCenterSheetTop(
+          viewportHeight: viewportH,
+          handleHeight: kSafaehPhoneHandleFallbackHeight,
+          firstContentHeight: kSafaehPhoneFirstContentFallbackHeight,
+          maxSheetHeight: viewportH * widget.maxHeightFactor,
+        );
+        final minHeight =
+            _minHeight ??
+            safaehPhoneCenterSheetHeight(
+              viewportHeight: viewportH,
+              sheetTop: fallbackTop,
+            );
+        return ConstrainedBox(
+          key: const ValueKey('safaeh_phone_center_extent'),
+          constraints: BoxConstraints(
+            minWidth: double.infinity,
+            minHeight: minHeight,
+            maxHeight: viewportH,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            height: minHeight,
+            child: KeyedSubtree(key: _childKey, child: widget.child),
+          ),
+        );
+      },
+    );
+  }
+}
+
+double _viewportHeightOf(BuildContext context) {
+  final box = context.findRenderObject() as RenderBox?;
+  if (box != null && box.hasSize && box.constraints.maxHeight.isFinite) {
+    return box.constraints.maxHeight;
+  }
+  return MediaQuery.sizeOf(context).height;
+}
+
+class _PhoneCenterMetrics {
+  const _PhoneCenterMetrics({
+    required this.handleHeight,
+    required this.firstContentHeight,
+    required this.compactHeight,
+  });
+
+  final double handleHeight;
+  final double firstContentHeight;
+  final double compactHeight;
+}
+
+_PhoneCenterMetrics? _safaehPhoneCenterMetricsOf(RenderBox root) {
+  final flex = _findVerticalFlex(root);
+  if (flex == null) return null;
+  final children = _flexBoxChildren(flex);
+  if (children.isEmpty) return null;
+  var handleH = children.first.size.height;
+  // Handle, optional in-body title, then the host child. Title is chrome.
+  final bodyIndex = children.length > 2 ? 2 : 1;
+  if (children.length > 2) {
+    handleH += children[1].size.height;
+  }
+  final firstH = children.length > bodyIndex
+      ? _firstContentHeight(children[bodyIndex])
+      : 0.0;
+  var compact = 0.0;
+  try {
+    compact = flex.getMaxIntrinsicHeight(flex.size.width);
+  } catch (_) {
+    compact = handleH + firstH;
+  }
+  if (compact <= 0) compact = handleH + firstH;
+  return _PhoneCenterMetrics(
+    handleHeight: handleH,
+    firstContentHeight: firstH,
+    compactHeight: compact,
+  );
+}
+
+RenderFlex? _findVerticalFlex(RenderBox box, {int maxDepth = 24}) {
+  var current = box;
+  for (var i = 0; i < maxDepth; i++) {
+    if (current is RenderFlex && current.direction == Axis.vertical) {
+      return current;
+    }
+    final child = _singleBoxChild(current);
+    if (child == null) return null;
+    current = child;
+  }
+  return null;
+}
+
+List<RenderBox> _flexBoxChildren(RenderFlex flex) {
+  final out = <RenderBox>[];
+  var child = flex.firstChild;
+  while (child != null) {
+    out.add(child);
+    child = flex.childAfter(child);
+  }
+  return out;
+}
+
+double _firstContentHeight(RenderBox box) {
+  var current = box;
+  for (var i = 0; i < 24; i++) {
+    if (current is RenderFlex && current.direction == Axis.vertical) {
+      var child = current.firstChild;
+      while (child != null) {
+        if (child.size.height > 1) return child.size.height;
+        child = current.childAfter(child);
+      }
+      return current.size.height;
+    }
+    final child = _singleBoxChild(current);
+    if (child == null) return current.size.height;
+    current = child;
+  }
+  return box.size.height;
+}
+
+RenderBox? _singleBoxChild(RenderObject object) {
+  if (object is RenderProxyBox) return object.child;
+  if (object is RenderShiftedBox) return object.child;
+  if (object is RenderViewport) {
+    var sliver = object.firstChild;
+    while (sliver != null) {
+      final box = _boxFromSliver(sliver);
+      if (box != null) return box;
+      sliver = object.childAfter(sliver);
+    }
+    return null;
+  }
+  if (object is RenderObjectWithChildMixin<RenderBox>) {
+    return object.child;
+  }
+  if (object is RenderObjectWithChildMixin<RenderObject>) {
+    final child = object.child;
+    if (child is RenderBox) return child;
+  }
+  return null;
+}
+
+RenderBox? _boxFromSliver(RenderSliver sliver) {
+  if (sliver is RenderSliverToBoxAdapter) return sliver.child;
+  if (sliver is RenderSliverPadding) {
+    final child = sliver.child;
+    if (child != null) return _boxFromSliver(child);
+  }
+  return null;
 }
 
 class _AdaptiveSheetHost extends StatelessWidget {
@@ -96,6 +499,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
     required this.dialogMaxWidth,
     required this.motion,
     required this.enterCurve,
+    required this.exitCurve,
     required this.radius,
     this.title,
     this.titleBuilder,
@@ -107,6 +511,12 @@ class _AdaptiveSheetHost extends StatelessWidget {
     this.railWidthOf,
     this.fadeScale,
     this.slideUp,
+    this.phonePlacement = SafaehPhoneSheetPlacement.bottom,
+    this.dismissValue,
+    this.useRootNavigator = true,
+    this.dismissLabel,
+    this.closeTooltip,
+    this.paintPhoneTitle = true,
   });
 
   final Widget child;
@@ -126,10 +536,17 @@ class _AdaptiveSheetHost extends StatelessWidget {
   final double dialogMaxWidth;
   final Duration motion;
   final Curve enterCurve;
+  final Curve exitCurve;
   final double radius;
   final double Function(BuildContext context)? railWidthOf;
   final SafaehTransition? fadeScale;
   final SafaehTransition? slideUp;
+  final SafaehPhoneSheetPlacement phonePlacement;
+  final Object? dismissValue;
+  final bool useRootNavigator;
+  final String? dismissLabel;
+  final String? closeTooltip;
+  final bool paintPhoneTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +573,8 @@ class _AdaptiveSheetHost extends StatelessWidget {
         : (showDragHandle ? 24.0 : 8.0);
     final bodyMaxHeight = math.max(0.0, effectiveMaxHeight - chromeHeight);
 
+    final expandPhone =
+        !isWide && phonePlacement == SafaehPhoneSheetPlacement.center;
     final BorderRadius panelRadius = isWide
         ? BorderRadius.circular(radius)
         : BorderRadius.vertical(top: Radius.circular(radius));
@@ -200,40 +619,20 @@ class _AdaptiveSheetHost extends StatelessWidget {
                   else
                     const Spacer(),
                   if (tabletTopBarAction != null) ...[
-                    Focus(
-                      canRequestFocus: false,
-                      skipTraversal: true,
-                      descendantsAreFocusable: false,
-                      child: tabletTopBarAction!,
-                    ),
+                    tabletTopBarAction!,
                     const SizedBox(width: 4),
                   ],
-                  Tooltip(
-                    message: MaterialLocalizations.of(
-                      context,
-                    ).closeButtonTooltip,
-                    child: Material(
-                      type: MaterialType.button,
-                      color: Colors.transparent,
-                      child: InkWell(
-                        canRequestFocus: false,
-                        onTap: () {
-                          final navigator = Navigator.of(
-                            context,
-                            rootNavigator: true,
-                          );
-                          if (navigator.canPop()) navigator.pop(null);
-                        },
-                        customBorder: const CircleBorder(),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Icon(
-                            Icons.close,
-                            size: 22,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                      ),
+                  IconButton(
+                    tooltip:
+                        closeTooltip ??
+                        MaterialLocalizations.of(
+                          context,
+                        ).closeButtonTooltip,
+                    onPressed: () => safaehPop(context, dismissValue),
+                    icon: Icon(
+                      Icons.close,
+                      size: 22,
+                      color: cs.onSurface,
                     ),
                   ),
                 ],
@@ -242,16 +641,29 @@ class _AdaptiveSheetHost extends StatelessWidget {
           )
         : showDragHandle
         ? _PhoneDragHandle(
-            child: Padding(
-              key: const ValueKey('safaeh_drag_handle'),
-              padding: const EdgeInsets.only(top: 12, bottom: 8),
-              child: Center(
-                child: Container(
-                  width: 32,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outline,
-                    borderRadius: BorderRadius.circular(2),
+            child: Semantics(
+              container: true,
+              button: barrierDismissible,
+              label: barrierDismissible
+                  ? (dismissLabel ??
+                      MaterialLocalizations.of(
+                        context,
+                      ).modalBarrierDismissLabel)
+                  : null,
+              onTap: barrierDismissible
+                  ? () => safaehPop(context, dismissValue)
+                  : null,
+              child: Padding(
+                key: const ValueKey('safaeh_drag_handle'),
+                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                child: Center(
+                  child: Container(
+                    width: 32,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: cs.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
               ),
@@ -269,6 +681,14 @@ class _AdaptiveSheetHost extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: header,
         ),
+        if (!isWide &&
+            paintPhoneTitle &&
+            showTitle &&
+            titleChild != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: titleChild,
+          ),
         Flexible(
           fit: FlexFit.loose,
           child: ConstrainedBox(
@@ -328,8 +748,13 @@ class _AdaptiveSheetHost extends StatelessWidget {
       sheet = _PhoneSheetDragDismiss(
         motion: motion,
         enterCurve: enterCurve,
-        child: sheet,
+        dismissValue: dismissValue,
+        barrierDismissible: barrierDismissible,
+        child: showDragHandle ? sheet : _PhoneDragHandle(child: sheet),
       );
+    }
+    if (expandPhone) {
+      sheet = SafaehPhoneCenterExtent(child: sheet);
     }
 
     final alignedPanel = AnimatedPadding(
@@ -349,7 +774,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
     // Call the transition once. Wrapping another AnimatedBuilder here nested
     // with Hisab's fade/slide builders and doubled work on every tick.
     final entering = isWide
-        ? (fadeScale ?? _defaultFadeScale)(
+        ? (fadeScale ?? safaehFadeScale)(
             animation: openAnimation,
             child: alignedPanel,
           )
@@ -358,17 +783,21 @@ class _AdaptiveSheetHost extends StatelessWidget {
             child: alignedPanel,
           );
 
-    return Stack(
+    final host = SafaehTheme(
+      data: SafaehTheme.of(context).copyWith(
+        enterCurve: enterCurve,
+        exitCurve: exitCurve,
+      ),
+      child: SafaehNavigatorScope(
+      useRootNavigator: useRootNavigator,
+      child: Stack(
       fit: StackFit.expand,
       children: [
         if (barrierDismissible)
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
-              onTap: () {
-                final navigator = Navigator.of(context, rootNavigator: true);
-                if (navigator.canPop()) navigator.pop(null);
-              },
+              onTap: () => safaehPop(context, dismissValue),
               child: const SizedBox.expand(),
             ),
           ),
@@ -388,25 +817,18 @@ class _AdaptiveSheetHost extends StatelessWidget {
           ),
         ),
       ],
+    ),
+    ),
+    );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (barrierDismissible) safaehPop(context, dismissValue);
+      },
+      child: host,
     );
   }
-}
-
-Widget _defaultFadeScale({
-  required Animation<double> animation,
-  required Widget child,
-}) {
-  return AnimatedBuilder(
-    animation: animation,
-    builder: (context, child) {
-      final t = Curves.easeOutCubic.transform(animation.value.clamp(0.0, 1.0));
-      return Opacity(
-        opacity: t,
-        child: Transform.scale(scale: 0.96 + (0.04 * t), child: child),
-      );
-    },
-    child: child,
-  );
 }
 
 Widget _defaultSlideUp({
@@ -416,11 +838,12 @@ Widget _defaultSlideUp({
   return AnimatedBuilder(
     animation: animation,
     builder: (context, child) {
-      final t = Curves.easeOutCubic.transform(animation.value.clamp(0.0, 1.0));
+      final t = animation.value.clamp(0.0, 1.0);
+      final curved = safaehCurveFor(context, animation).transform(t);
       return Opacity(
-        opacity: t,
-        child: Transform.translate(
-          offset: Offset(0, (1 - t) * 56),
+        opacity: curved,
+        child: FractionalTranslation(
+          translation: Offset(0, 1 - curved),
           child: child,
         ),
       );
@@ -434,11 +857,15 @@ class _PhoneSheetDragDismiss extends StatefulWidget {
     required this.child,
     required this.motion,
     required this.enterCurve,
+    this.dismissValue,
+    this.barrierDismissible = true,
   });
 
   final Widget child;
   final Duration motion;
   final Curve enterCurve;
+  final Object? dismissValue;
+  final bool barrierDismissible;
 
   @override
   State<_PhoneSheetDragDismiss> createState() => _PhoneSheetDragDismissState();
@@ -496,11 +923,11 @@ class _PhoneSheetDragDismissState extends State<_PhoneSheetDragDismiss>
   }
 
   Future<void> _tryDismiss() async {
-    final navigator = Navigator.of(context, rootNavigator: true);
-    final popped = await navigator.maybePop();
-    if (!popped && mounted && _dy.value > 0) {
+    if (!widget.barrierDismissible) {
       _snapBack();
+      return;
     }
+    safaehPop(context, widget.dismissValue);
   }
 
   void _snapBack() {

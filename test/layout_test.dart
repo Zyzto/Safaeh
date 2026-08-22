@@ -51,6 +51,33 @@ void main() {
     expect(find.text('aside-here'), findsOneWidget);
   });
 
+  testWidgets('SafaehEndAsideLayout places aside before the band in RTL', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: SizedBox(
+          width: 900,
+          height: 400,
+          child: SafaehEndAsideLayout(
+            leftOffset: 200,
+            bandWidth: 400,
+            endFree: 300,
+            isRtl: true,
+            asideWidth: 200,
+            aside: Text('aside-here'),
+            child: Text('band-body'),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getTopLeft(find.text('aside-here')).dx,
+      lessThan(tester.getTopLeft(find.text('band-body')).dx),
+    );
+  });
+
   testWidgets('SafaehEndAsideLayout hides aside when endFree is tight', (
     tester,
   ) async {
@@ -220,6 +247,36 @@ void main() {
 
     final fabLeft = tester.getTopLeft(find.byKey(fabKey)).dx;
     expect(fabLeft, closeTo(516, 2));
+  });
+
+  testWidgets('SafaehContentAlignedFabLocation sits before the band in RTL', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const fabKey = Key('rtl-fab');
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          floatingActionButtonLocation: SafaehContentAlignedFabLocation(
+            leftOffset: 100,
+            bandWidth: 400,
+            textDirection: TextDirection.rtl,
+          ),
+          floatingActionButton: FloatingActionButton(
+            key: fabKey,
+            onPressed: null,
+            child: Icon(Icons.add),
+          ),
+          body: SizedBox.expand(),
+        ),
+      ),
+    );
+
+    expect(tester.getTopLeft(find.byKey(fabKey)).dx, closeTo(28, 2));
   });
 
   testWidgets('SafaehContentAlignedAppBar start-aligns the title', (
