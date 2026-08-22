@@ -15,6 +15,10 @@
 </p>
 
 <p align="center">
+  <a href="https://zyzto.github.io/Safaeh/"><img alt="المثال الحي" src="https://img.shields.io/badge/live%20demo-zyzto.github.io%2FSafaeh-8B6914?style=for-the-badge" /></a>
+</p>
+
+<p align="center">
   <a href="https://pub.dev/packages/safaeh"><img alt="pub.dev" src="https://img.shields.io/pub/v/safaeh.svg?style=flat-square&label=pub.dev&color=8B6914" /></a>
   <a href="https://github.com/Zyzto/Safaeh"><img alt="repo" src="https://img.shields.io/badge/github-Zyzto%2FSafaeh-C0C0C0?style=flat-square" /></a>
   <img alt="flutter" src="https://img.shields.io/badge/Flutter-%3E%3D3.11-C0C0C0?style=flat-square&logo=flutter&logoColor=white" />
@@ -22,13 +26,19 @@
 </p>
 
 <p align="center">
+  <strong><a href="https://zyzto.github.io/Safaeh/">المثال الحي</a></strong>
+  — افتح كتالوج المثال في المتصفح<br/>
+  <a href="https://zyzto.github.io/Safaeh/"><span dir="ltr">zyzto.github.io/Safaeh</span></a>
+</p>
+
+<p align="center">
+  <a href="https://zyzto.github.io/Safaeh/">المثال الحي</a> ·
   <a href="#التثبيت">Install</a> ·
   <a href="#ابدأ-في-دقائق">Quick start</a> ·
   <a href="#ودجات">ودجات</a> ·
   <a href="#ماذا-تقدّم">Features</a> ·
   <a href="#ماذا-يبقى-في-التطبيق">Host app</a> ·
   <a href="#المثال">Example</a> ·
-  <a href="https://zyzto.github.io/Safaeh/">المثال الحي</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="VERSIONING.md">Versioning</a> ·
   <a href="docs/host-integration.md">Host integration</a>
@@ -57,9 +67,9 @@
 - chrome يحترم <span dir="ltr"><code>MediaQuery.disableAnimationsOf</code></span>
 - بلا <span dir="ltr"><code>easy_localization</code></span> أو Riverpod أو <span dir="ltr"><code>go_router</code></span> أو <span dir="ltr"><code>mobile_scanner</code></span> داخل الحزمة
 
-**صفائح** هي طبقة الـ chrome هذه. حساب يغلّفها بـ <span dir="ltr"><code>UserText</code></span> وعرض الـ rail والصلاحيات وكاميرا / فك QR الحيّ.
+**صفائح** هي طبقة الـ chrome هذه. مستخدمة في حساب.
 
-على <span dir="ltr">pub.dev</span>: <span dir="ltr"><a href="https://pub.dev/packages/safaeh"><code>safaeh</code></a></span> · المستودع: <span dir="ltr"><a href="https://github.com/Zyzto/Safaeh">Zyzto/Safaeh</a></span>. حساب هو التطبيق المرجعي.
+على <span dir="ltr">pub.dev</span>: <span dir="ltr"><a href="https://pub.dev/packages/safaeh"><code>safaeh</code></a></span> · المستودع: <span dir="ltr"><a href="https://github.com/Zyzto/Safaeh">Zyzto/Safaeh</a></span>.
 
 </div>
 
@@ -72,17 +82,21 @@
 </div>
 
 <p align="center">
-  <img src="screenshots/picker.png" alt="منتقي البطاقات" width="200" />
-  <img src="screenshots/confirm.png" alt="ورقة تأكيد" width="200" />
-  <img src="screenshots/option-tiles.png" alt="صفوف خيارات" width="200" />
+  <a href="https://zyzto.github.io/Safaeh/">
+    <img src="screenshots/picker.png" alt="منتقي البطاقات — المثال الحي" width="200" />
+    <img src="screenshots/confirm.png" alt="ورقة تأكيد — المثال الحي" width="200" />
+    <img src="screenshots/option-tiles.png" alt="صفوف خيارات — المثال الحي" width="200" />
+  </a>
 </p>
 
 <p align="center">
-  <sub>منتقي البطاقات · تأكيد · صفوف خيارات</sub>
+  <sub>منتقي البطاقات · تأكيد · صفوف خيارات — <a href="https://zyzto.github.io/Safaeh/">جرّبها في المثال الحي</a></sub>
 </p>
 
 <p align="center">
-  <img src="screenshots/sidenav.png" alt="سكة جانبية" width="320" />
+  <a href="https://zyzto.github.io/Safaeh/">
+    <img src="screenshots/sidenav.png" alt="سكة جانبية — المثال الحي" width="320" />
+  </a>
 </p>
 
 <div dir="rtl" lang="ar">
@@ -313,7 +327,7 @@ SafaehContentBand(
 
 <div dir="rtl" lang="ar">
 
-<span dir="ltr"><code>SafaehContentBand</code></span> يتمركز من قيود العرض الواردة ويُخفي <span dir="ltr"><code>aside</code></span> عندما يكون العرض ضيقاً. التطبيقات ذات rail شقيق (حساب) تبقي حساب <span dir="ltr"><code>leftOffset</code></span> / <span dir="ltr"><code>bandWidth</code></span> وتستخدم <span dir="ltr"><code>SafaehEndAsideLayout</code></span>.
+<span dir="ltr"><code>SafaehContentBand</code></span> يتمركز من قيود العرض الواردة ويُخفي <span dir="ltr"><code>aside</code></span> عندما يكون العرض ضيقاً. التطبيقات ذات rail شقيق تبقي حساب <span dir="ltr"><code>leftOffset</code></span> / <span dir="ltr"><code>bandWidth</code></span> وتستخدم <span dir="ltr"><code>SafaehEndAsideLayout</code></span>.
 
 مقاييس الشريط للتطبيقات الأخرى (شريط التطبيق، FAB، aside):
 
@@ -372,9 +386,7 @@ await showSafaehCameraSheet<void>(
 | التوجيه | <span dir="ltr"><code>go_router</code></span>، عرض الـ rail المحجوز عبر <span dir="ltr"><code>railWidthOf</code></span> |
 | الكاميرا | <span dir="ltr"><code>mobile_scanner</code></span>، الصلاحيات، قفل الاتجاه عبر <span dir="ltr"><code>SystemChrome</code></span> |
 | الحالة | Riverpod / ما يستخدمه التطبيق أصلاً |
-| Tiles | <span dir="ltr"><code>UserText</code></span> + ألوان لكنة اختيارية على <span dir="ltr"><code>SafaehOptionTile</code></span> (<span dir="ltr"><code>SheetOptionTile</code></span> في حساب) |
-
-حساب ما زال يمرّر مفاتيح <span dir="ltr"><code>shell_nav_*</code></span> إلى <span dir="ltr"><code>SafaehSidenav</code></span> حتى تبقى اختبارات الـ widget الحالية خضراء.
+| Tiles | <span dir="ltr"><code>UserText</code></span> + ألوان لكنة اختيارية على <span dir="ltr"><code>SafaehOptionTile</code></span> |
 
 </div>
 
@@ -435,9 +447,11 @@ await showSafaehCameraSheet<void>(
 
 ## المثال
 
-كتالوج بلا Riverpod في <span dir="ltr"><a href="example/"><code>example/</code></a></span> — نفس تقسيم <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span>: <span dir="ltr"><code>catalog.dart</code></span> (نصوص en / ar / ja / zh / es)، <span dir="ltr"><code>app.dart</code></span>، ومعرض عمودي في <span dir="ltr"><code>SafaehContentBand</code></span> لكل API عام. عناوين الأقسام تفتح العرض المستقل، والشاشات العريضة توزّع البطاقات على أعمدة في الصفحة نفسها. تبديل لغة وسمة، بلا <span dir="ltr"><code>mobile_scanner</code></span>.
+<strong><a href="https://zyzto.github.io/Safaeh/">المثال الحي — <span dir="ltr">zyzto.github.io/Safaeh</span></a></strong>
 
-المثال على الويب: <span dir="ltr"><a href="https://zyzto.github.io/Safaeh/">zyzto.github.io/Safaeh</a></span>
+الكتالوج المستضاف هو بناء ويب <span dir="ltr"><code>example/</code></span>. التكامل المستمر ينشره بعد نجاح الاختبارات على <span dir="ltr"><code>main</code></span>.
+
+كتالوج بلا Riverpod في <span dir="ltr"><a href="example/"><code>example/</code></a></span> — نفس تقسيم <span dir="ltr"><a href="https://github.com/Zyzto/Edadat">Edadat</a></span>: <span dir="ltr"><code>catalog.dart</code></span> (نصوص en / ar / ja / zh / es)، <span dir="ltr"><code>app.dart</code></span>، ومعرض عمودي في <span dir="ltr"><code>SafaehContentBand</code></span> لكل API عام. عناوين الأقسام تفتح العرض المستقل، والشاشات العريضة توزّع البطاقات على أعمدة في الصفحة نفسها. تبديل لغة وسمة، بلا <span dir="ltr"><code>mobile_scanner</code></span>.
 
 المثال بأسلوب package (web فقط في المستودع)؛ حلّل بـ:
 
@@ -448,8 +462,6 @@ cd example && flutter pub get && dart analyze --fatal-infos && flutter test
 <span dir="ltr"><code>example/test/widget_images_test.dart</code></span> يكتب صور الودجات إلى <span dir="ltr"><a href="screenshots/"><code>screenshots/</code></a></span>.
 
 للتشغيل على جهاز، ولّد platforms الأخرى أولاً (<span dir="ltr"><code>flutter create . --platforms=android,ios</code></span> داخل <span dir="ltr"><code>example/</code></span>). التفاصيل: <span dir="ltr"><a href="example/README.md">example/README.md</a></span>.
-
-حساب هو التطبيق المرجعي: <span dir="ltr"><code>lib/app.dart</code></span> يثبّت <span dir="ltr"><code>SafaehTheme</code></span>، و<span dir="ltr"><code>showResponsiveSheet</code></span> يغلّف <span dir="ltr"><code>showSafaeh</code></span>، وكاميرا الإيصال / ماسح الدعوة يغلّفان <span dir="ltr"><code>showSafaehCameraSheet</code></span>.
 
 اختبارات الحزمة:
 
@@ -486,7 +498,5 @@ dart analyze --fatal-infos && flutter test
 ## الرخصة
 
 <span dir="ltr"><a href="LICENSE">MPL-2.0</a></span> — weak copyleft، الاستخدام التجاري مسموح. ملفات الحزمة المعدّلة تبقى تحت MPL؛ تطبيقك يمكن أن يبقى closed-source.
-
-حساب كعمل أكبر يبقى AGPL ويمكنه الاعتماد على حزمة <span dir="ltr">pub.dev</span> أو وسم git.
 
 </div>

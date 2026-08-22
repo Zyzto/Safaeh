@@ -13,6 +13,10 @@
 </p>
 
 <p align="center">
+  <a href="https://zyzto.github.io/Safaeh/"><img alt="Live demo" src="https://img.shields.io/badge/live%20demo-zyzto.github.io%2FSafaeh-8B6914?style=for-the-badge" /></a>
+</p>
+
+<p align="center">
   <a href="https://pub.dev/packages/safaeh"><img alt="pub.dev" src="https://img.shields.io/pub/v/safaeh.svg?style=flat-square&label=pub.dev&color=8B6914" /></a>
   <a href="https://github.com/Zyzto/Safaeh"><img alt="repo" src="https://img.shields.io/badge/github-Zyzto%2FSafaeh-C0C0C0?style=flat-square" /></a>
   <img alt="flutter" src="https://img.shields.io/badge/Flutter-%3E%3D3.11-C0C0C0?style=flat-square&logo=flutter&logoColor=white" />
@@ -20,13 +24,19 @@
 </p>
 
 <p align="center">
+  <strong><a href="https://zyzto.github.io/Safaeh/">Live demo</a></strong>
+  — open the example catalog in the browser<br/>
+  <a href="https://zyzto.github.io/Safaeh/">zyzto.github.io/Safaeh</a>
+</p>
+
+<p align="center">
+  <a href="https://zyzto.github.io/Safaeh/">Live demo</a> ·
   <a href="#install">Install</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#widgets">Widgets</a> ·
   <a href="#features-at-a-glance">Features</a> ·
   <a href="#what-stays-in-the-host">Host app</a> ·
   <a href="#example">Example</a> ·
-  <a href="https://zyzto.github.io/Safaeh/">Live demo</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="VERSIONING.md">Versioning</a> ·
   <a href="docs/host-integration.md">Host integration</a> ·
@@ -53,27 +63,30 @@ overlays. Then you need:
 - no `easy_localization`, Riverpod, `go_router`, or `mobile_scanner` inside the
   package
 
-**Safaeh** is that chrome layer. Hisab wraps it with `UserText`, rail width,
-permissions, and the live camera / QR decoder.
+**Safaeh** is that chrome layer. Used in Hisab.
 
-On pub.dev: [`safaeh`](https://pub.dev/packages/safaeh) · Repo: [Zyzto/Safaeh](https://github.com/Zyzto/Safaeh). Hisab is the reference host.
+On pub.dev: [`safaeh`](https://pub.dev/packages/safaeh) · Repo: [Zyzto/Safaeh](https://github.com/Zyzto/Safaeh).
 
 ---
 
 ## Widgets
 
 <p align="center">
-  <img src="screenshots/picker.png" alt="Card picker" width="200" />
-  <img src="screenshots/confirm.png" alt="Confirm sheet" width="200" />
-  <img src="screenshots/option-tiles.png" alt="Option tiles" width="200" />
+  <a href="https://zyzto.github.io/Safaeh/">
+    <img src="screenshots/picker.png" alt="Card picker — live demo" width="200" />
+    <img src="screenshots/confirm.png" alt="Confirm sheet — live demo" width="200" />
+    <img src="screenshots/option-tiles.png" alt="Option tiles — live demo" width="200" />
+  </a>
 </p>
 
 <p align="center">
-  <sub>Card picker · Confirm · Option tiles</sub>
+  <sub>Card picker · Confirm · Option tiles — <a href="https://zyzto.github.io/Safaeh/">try them in the live demo</a></sub>
 </p>
 
 <p align="center">
-  <img src="screenshots/sidenav.png" alt="Sidenav rail" width="320" />
+  <a href="https://zyzto.github.io/Safaeh/">
+    <img src="screenshots/sidenav.png" alt="Sidenav rail — live demo" width="320" />
+  </a>
 </p>
 
 Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`cd example && flutter test test/widget_images_test.dart`).
@@ -273,8 +286,8 @@ SafaehContentBand(
 ```
 
 `SafaehContentBand` centers from incoming constraints and hides `aside` when
-narrow (`SafaehThemeData.isWide`). Hosts with a sibling shell rail (Hisab)
-keep their own `leftOffset` / `bandWidth` math and use `SafaehEndAsideLayout`.
+narrow (`SafaehThemeData.isWide`). Hosts with a sibling shell rail keep their
+own `leftOffset` / `bandWidth` math and use `SafaehEndAsideLayout`.
 
 Band metrics for other apps (app bar, FAB, aside):
 
@@ -328,10 +341,7 @@ Keep `mobile_scanner` in the app.
 | Routing | `go_router`, reserved rail width via `railWidthOf` |
 | Camera | `mobile_scanner`, permissions, `SystemChrome` orientation lock |
 | State | Riverpod / whatever the app already uses |
-| Tiles | UserText + optional accent colors on `SafaehOptionTile` (`SheetOptionTile` in Hisab) |
-
-Hisab still passes `shell_nav_*` keys into `SafaehSidenav` so existing widget
-tests stay green.
+| Tiles | `UserText` + optional accent colors on `SafaehOptionTile` |
 
 ---
 
@@ -380,14 +390,16 @@ tests stay green.
 
 ## Example
 
+**[Live demo — zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)**
+
+The hosted catalog is the `example/` web build. CI deploys it after tests pass
+on `main`.
+
 A Riverpod-free catalog lives in [`example/`](example/) — same split as
 [Edadat](https://github.com/Zyzto/Edadat): `catalog.dart` (en / ar / ja / zh / es),
 `app.dart` (theme + home), and a vertical `SafaehContentBand` gallery of every
 public API. Section titles open the standalone demo; wide bands use extra
 columns on the same page. Language and theme toggles, no `mobile_scanner`.
-
-Live web build: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
-— CI deploys `example/` there after tests pass on `main`.
 
 The example is package-style (web only in-tree); analyze with:
 
@@ -398,10 +410,6 @@ cd example && flutter pub get && dart analyze --fatal-infos && flutter test
 `example/test/widget_images_test.dart` writes widget PNGs to [`screenshots/`](screenshots/).
 
 To run on a device, generate the other platforms (`flutter create . --platforms=android,ios` inside `example/`). Details: [example/README.md](example/README.md).
-
-Hisab is the reference host: it installs `SafaehTheme`, wraps `showSafaeh` as
-`showResponsiveSheet`, and the receipt camera / invite scanner wrap
-`showSafaehCameraSheet`.
 
 Package tests:
 
@@ -427,6 +435,3 @@ See [VERSIONING.md](VERSIONING.md) and [CHANGELOG.md](CHANGELOG.md). Tags are `v
 
 [MPL-2.0](LICENSE) — weak copyleft, commercial use allowed. Modified package
 files stay under MPL; your app can remain closed-source.
-
-Hisab as a larger work stays AGPL and can depend on the pub.dev package or a
-git tag.
