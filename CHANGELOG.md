@@ -10,6 +10,17 @@ See [VERSIONING.md](VERSIONING.md).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-22
+
+Pin Flutter 3.47.1 with FVM so local, IDE, and CI use the same SDK.
+
+### Changed
+- Pin Flutter **3.47.1** in `.fvmrc`, `.flutter-version`, and GitHub
+  Actions. IDE SDK path is `.fvm/versions/3.47.1`. The FVM cache
+  (`.fvm/`) is gitignored.
+- Refresh lockfiles (`matcher`, `meta`, `test_api`, `vector_math`,
+  `intl`) and exclude platform/`build` trees from the analyzer.
+
 ### Added
 - Tile pickers accept `searchMatches` so hosts can filter without ASCII
   `toLowerCase()`.
@@ -22,7 +33,7 @@ See [VERSIONING.md](VERSIONING.md).
 - `showSafaeh` / `SafaehRouteOptions` accept `dismissLabel` and
   `closeTooltip`.
 
-### Changed
+### Docs
 - README widget images are captured with `widgets_to_image` instead of
   full-catalog screenshots. CI uploads those PNGs and deploys the
   example web build to GitHub Pages only after tests pass.

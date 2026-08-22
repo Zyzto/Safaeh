@@ -138,7 +138,7 @@
 
 ```yaml
 dependencies:
-  safaeh: ^0.2.0
+  safaeh: ^0.2.1
 ```
 
 <div dir="rtl" lang="ar">
@@ -162,7 +162,7 @@ dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.2.0
+      ref: v0.2.1
 ```
 
 ```dart
@@ -171,7 +171,7 @@ import 'package:safaeh/safaeh.dart';
 
 <div dir="rtl" lang="ar">
 
-الإصدار الحالي: **0.2.0**.
+الإصدار الحالي: **0.2.1**.
 
 </div>
 
