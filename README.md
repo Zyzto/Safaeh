@@ -39,7 +39,7 @@
   <a href="#example">Example</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="VERSIONING.md">Versioning</a> ·
-  <a href="docs/host-integration.md">Host integration</a> ·
+  <a href="doc/host-integration.md">Host integration</a> ·
   <a href="README.ar.md">العربية</a>
 </p>
 
@@ -311,7 +311,7 @@ SafaehContentAlignedFabLocation.resolve(
 );
 ```
 
-See [docs/host-integration.md](docs/host-integration.md).
+See [doc/host-integration.md](doc/host-integration.md).
 
 ### 8. Camera / QR chrome
 

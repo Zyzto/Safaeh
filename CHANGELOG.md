@@ -149,6 +149,7 @@ milestone exception to the usual MINOR = features rule.
 - Page-index overlay no longer double-`setState`s on close.
 
 ### Docs
+- Host integration lives at `doc/host-integration.md` (pub layout).
 - Confirm result (`true` / `false` / `null`) is spelled out in both READMEs.
 - Example catalog wraps the vertical gallery in `SafaehContentBand`; section
   titles open the standalone demo (live sheet or pushed page). Camera and
@@ -162,7 +163,7 @@ milestone exception to the usual MINOR = features rule.
   plugin) are not a black hole. The sheet-shell card is an export-report
   example (`buildSafaehSheetShell` + format tiles + Cancel/Save).
   Catalog also has multi-picker (search + confirm) and status-body
-  cards. [docs/host-integration.md](docs/host-integration.md) covers the
+  cards. [doc/host-integration.md](doc/host-integration.md) covers the
   route bag, `safaehPop`, label builders, and confirm dismiss.
 
 ## [0.1.0] - 2026-08-21
@@ -194,7 +195,7 @@ routing, Riverpod, and camera plugins.
 - **Tokens:** `SafaehTheme` / `SafaehThemeData` / `copyWith`,
   `safaehResolvedMotion` (zeros when `MediaQuery.disableAnimationsOf`).
 - **Branding:** Baz Light vendored at `assets/fonts/baz-Light.otf`.
-- **Docs:** bilingual READMEs, [docs/host-integration.md](docs/host-integration.md),
+- **Docs:** bilingual READMEs, [doc/host-integration.md](doc/host-integration.md),
   this changelog, versioning notes, package CI template.
 
 ### Notes

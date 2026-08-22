@@ -41,7 +41,7 @@
   <a href="#المثال">Example</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="VERSIONING.md">Versioning</a> ·
-  <a href="docs/host-integration.md">Host integration</a>
+  <a href="doc/host-integration.md">Host integration</a>
   <br/>
   <a href="README.md"><span dir="ltr">English</span></a>
 </p>
@@ -351,7 +351,7 @@ SafaehContentAlignedFabLocation.resolve(
 );
 ```
 
-انظر <span dir="ltr"><a href="docs/host-integration.md">docs/host-integration.md</a></span>.
+انظر <span dir="ltr"><a href="doc/host-integration.md">doc/host-integration.md</a></span>.
 
 ### 8. Chrome الكاميرا / QR
 
