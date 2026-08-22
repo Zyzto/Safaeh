@@ -10,8 +10,11 @@ go through catalog keys; emails stay LTR in Arabic via `catalogIsolateLabel`.
 
 Live: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
 
-`web/` is in-tree for GitHub Pages. Other platforms are not generated, so
-`flutter run` on a device needs `flutter create .` first.
+`web/` is in-tree for GitHub Pages. A green [CI](../.github/workflows/ci.yml)
+run on `main` builds `example/` (`flutter build web --release --base-href /Safaeh/`)
+and deploys that site. **Run workflow** on CI republishes the same path.
+Other platforms are not generated, so `flutter run` on a device needs
+`flutter create .` first.
 
 ## Analyze
 
@@ -21,15 +24,17 @@ flutter pub get
 dart analyze --fatal-infos
 ```
 
-## Tests and screenshots
+## Tests and widget images
 
 ```bash
 cd example
 flutter test
 ```
 
-`test/screenshots_test.dart` writes PNGs to [`../screenshots/`](../screenshots/)
-for the package READMEs.
+`test/widget_images_test.dart` captures picker, confirm, option tiles, and
+sidenav with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image)
+into [`../screenshots/`](../screenshots/). CI runs that test and uploads the
+PNGs as the `widget-images` artifact.
 
 ## Web
 

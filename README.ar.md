@@ -24,7 +24,7 @@
 <p align="center">
   <a href="#التثبيت">Install</a> ·
   <a href="#ابدأ-في-دقائق">Quick start</a> ·
-  <a href="#لقطات">Screenshots</a> ·
+  <a href="#ودجات">ودجات</a> ·
   <a href="#ماذا-تقدّم">Features</a> ·
   <a href="#ماذا-يبقى-في-التطبيق">Host app</a> ·
   <a href="#المثال">Example</a> ·
@@ -67,39 +67,27 @@
 
 <div dir="rtl" lang="ar">
 
-## لقطات
+## ودجات
 
 </div>
 
 <p align="center">
-  <img src="screenshots/catalog-en.png" alt="كتالوج صفائح (إنجليزي)" width="180" />
-  <img src="screenshots/catalog-ar.png" alt="كتالوج صفائح (عربي)" width="180" />
-  <img src="screenshots/picker-en.png" alt="منتقي البطاقات" width="180" />
+  <img src="screenshots/picker.png" alt="منتقي البطاقات" width="200" />
+  <img src="screenshots/confirm.png" alt="ورقة تأكيد" width="200" />
+  <img src="screenshots/option-tiles.png" alt="صفوف خيارات" width="200" />
 </p>
 
 <p align="center">
-  <sub>كتالوج إنجليزي · عربي RTL · منتقي البطاقات</sub>
-</p>
-
-<details>
-<summary>السمة الداكنة والمزيد</summary>
-
-<p align="center">
-  <img src="screenshots/catalog-en-dark.png" alt="كتالوج داكن (إنجليزي)" width="140" />
-  <img src="screenshots/catalog-ar-dark.png" alt="كتالوج داكن (عربي)" width="140" />
-  <img src="screenshots/sidenav-en.png" alt="سكة جانبية" width="140" />
-  <img src="screenshots/page-index-en.png" alt="فهرس عائم" width="140" />
+  <sub>منتقي البطاقات · تأكيد · صفوف خيارات</sub>
 </p>
 
 <p align="center">
-  <sub>إنجليزي داكن · عربي داكن · سكة · فهرس</sub>
+  <img src="screenshots/sidenav.png" alt="سكة جانبية" width="320" />
 </p>
-
-</details>
 
 <div dir="rtl" lang="ar">
 
-مُلتقطة من كتالوج <span dir="ltr"><a href="example/"><code>example/</code></a></span> عبر <span dir="ltr"><code>cd example && flutter test test/screenshots_test.dart</code></span>.
+مُلتقطة بـ <span dir="ltr"><a href="https://pub.dev/packages/widgets_to_image"><code>widgets_to_image</code></a></span> عبر <span dir="ltr"><code>cd example && flutter test test/widget_images_test.dart</code></span>.
 
 </div>
 
@@ -457,7 +445,7 @@ await showSafaehCameraSheet<void>(
 cd example && flutter pub get && dart analyze --fatal-infos && flutter test
 ```
 
-<span dir="ltr"><code>example/test/screenshots_test.dart</code></span> يكتب PNG إلى <span dir="ltr"><a href="screenshots/"><code>screenshots/</code></a></span>.
+<span dir="ltr"><code>example/test/widget_images_test.dart</code></span> يكتب صور الودجات إلى <span dir="ltr"><a href="screenshots/"><code>screenshots/</code></a></span>.
 
 للتشغيل على جهاز، ولّد platforms الأخرى أولاً (<span dir="ltr"><code>flutter create . --platforms=android,ios</code></span> داخل <span dir="ltr"><code>example/</code></span>). التفاصيل: <span dir="ltr"><a href="example/README.md">example/README.md</a></span>.
 

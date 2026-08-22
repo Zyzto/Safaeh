@@ -22,7 +22,7 @@
 <p align="center">
   <a href="#install">Install</a> ·
   <a href="#quick-start">Quick start</a> ·
-  <a href="#screenshots">Screenshots</a> ·
+  <a href="#widgets">Widgets</a> ·
   <a href="#features-at-a-glance">Features</a> ·
   <a href="#what-stays-in-the-host">Host app</a> ·
   <a href="#example">Example</a> ·
@@ -60,35 +60,23 @@ On pub.dev: [`safaeh`](https://pub.dev/packages/safaeh) · Repo: [Zyzto/Safaeh](
 
 ---
 
-## Screenshots
+## Widgets
 
 <p align="center">
-  <img src="screenshots/catalog-en.png" alt="Safaeh catalog (English)" width="180" />
-  <img src="screenshots/catalog-ar.png" alt="Safaeh catalog (Arabic)" width="180" />
-  <img src="screenshots/picker-en.png" alt="Card picker" width="180" />
+  <img src="screenshots/picker.png" alt="Card picker" width="200" />
+  <img src="screenshots/confirm.png" alt="Confirm sheet" width="200" />
+  <img src="screenshots/option-tiles.png" alt="Option tiles" width="200" />
 </p>
 
 <p align="center">
-  <sub>English catalog · Arabic RTL · Card picker</sub>
-</p>
-
-<details>
-<summary>Dark theme and more chrome</summary>
-
-<p align="center">
-  <img src="screenshots/catalog-en-dark.png" alt="Safaeh catalog, dark (English)" width="140" />
-  <img src="screenshots/catalog-ar-dark.png" alt="Safaeh catalog, dark (Arabic)" width="140" />
-  <img src="screenshots/sidenav-en.png" alt="Sidenav rail" width="140" />
-  <img src="screenshots/page-index-en.png" alt="Page index overlay" width="140" />
+  <sub>Card picker · Confirm · Option tiles</sub>
 </p>
 
 <p align="center">
-  <sub>English dark · Arabic dark · Sidenav · Page index</sub>
+  <img src="screenshots/sidenav.png" alt="Sidenav rail" width="320" />
 </p>
 
-</details>
-
-Rendered from the [`example/`](example/) catalog (`cd example && flutter test test/screenshots_test.dart`).
+Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`cd example && flutter test test/widget_images_test.dart`).
 
 ---
 
@@ -399,6 +387,7 @@ public API. Section titles open the standalone demo; wide bands use extra
 columns on the same page. Language and theme toggles, no `mobile_scanner`.
 
 Live web build: [zyzto.github.io/Safaeh](https://zyzto.github.io/Safaeh/)
+— CI deploys `example/` there after tests pass on `main`.
 
 The example is package-style (web only in-tree); analyze with:
 
@@ -406,7 +395,7 @@ The example is package-style (web only in-tree); analyze with:
 cd example && flutter pub get && dart analyze --fatal-infos && flutter test
 ```
 
-`example/test/screenshots_test.dart` writes PNGs to [`screenshots/`](screenshots/).
+`example/test/widget_images_test.dart` writes widget PNGs to [`screenshots/`](screenshots/).
 
 To run on a device, generate the other platforms (`flutter create . --platforms=android,ios` inside `example/`). Details: [example/README.md](example/README.md).
 

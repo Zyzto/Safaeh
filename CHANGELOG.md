@@ -23,6 +23,9 @@ See [VERSIONING.md](VERSIONING.md).
   `closeTooltip`.
 
 ### Changed
+- README widget images are captured with `widgets_to_image` instead of
+  full-catalog screenshots. CI uploads those PNGs and deploys the
+  example web build to GitHub Pages only after tests pass.
 - Host integration documents Material localization fallbacks, required
   expand/collapse tooltips, physical-left band math, and the RTL icon
   contract.

@@ -6,14 +6,14 @@ repository: https://github.com/Zyzto/Safaeh
 issue_tracker: https://github.com/Zyzto/Safaeh/issues
 license: MPL-2.0
 screenshots:
-  - description: Catalog in English
-    path: screenshots/catalog-en.png
-  - description: Catalog in Arabic (RTL)
-    path: screenshots/catalog-ar.png
   - description: Card picker
-    path: screenshots/picker-en.png
-  - description: Dark catalog
-    path: screenshots/catalog-en-dark.png
+    path: screenshots/picker.png
+  - description: Confirm sheet
+    path: screenshots/confirm.png
+  - description: Option tiles
+    path: screenshots/option-tiles.png
+  - description: Sidenav rail
+    path: screenshots/sidenav.png
 
 environment:
   sdk: ^3.11.0
