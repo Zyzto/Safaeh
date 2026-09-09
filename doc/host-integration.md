@@ -61,9 +61,66 @@ settings. Named arguments still work; they fill in around the bag.
 `barrierDismissible`, `useRootNavigator`, and `phonePlacement` take the
 bag value when it is non-null.
 
+The bag also carries the appearance for package-owned floating shells:
+
+```dart
+await showSafaehPicker<int>(
+  context: context,
+  route: const SafaehRouteOptions(
+    floatingAppearance: SafaehFloatingAppearance(
+      style: SafaehFloatingSurfaceStyle.glass,
+      transparency: 44,
+    ),
+  ),
+  options: options,
+);
+```
+
+The resolution order is direct widget/call value, route value, theme value,
+then the existing surface default. Set a `SafaehFloatingAppearance` on
+`SafaehThemeData` to cover all package-owned floating chrome. The style
+presets are `solid`, `translucent`, `glass`, and `vista`; custom fields replace
+only their matching preset values. Transparency changes the fill/tint alpha,
+while borders and shadows keep their own contrast. Blur is clipped to the
+surface shape. Scrims, camera previews, QR message bodies, caller-owned child
+content, wide page-index rails, and host FABs are not treated as floating
+surfaces.
+
 Every `show*` also takes `useRootNavigator` (default `true`). Picker rows
 and sheet chrome pop through `safaehPop`, which reads
 `SafaehNavigatorScope` so a nested host navigator can opt out.
+
+## Overlay sidenav
+
+Use `SafaehSidenav(overlay: true)` when the rail should expand over the host
+without pushing or resizing the host content. Mount it above the content in a
+`Stack`; the package aligns and animates the rail at the start edge:
+
+```dart
+Stack(
+  fit: StackFit.expand,
+  children: [
+    const PageBody(),
+    SafaehSidenav(
+      overlay: true,
+      collapsed: collapsed,
+      onToggleCompact: () => setState(() => collapsed = !collapsed),
+      floatingAppearance: const SafaehFloatingAppearance(
+        style: SafaehFloatingSurfaceStyle.vista,
+      ),
+      title: 'Safaeh',
+      selectedIndex: index,
+      onDestinationSelected: onDestinationSelected,
+      destinations: destinations,
+    ),
+  ],
+);
+```
+
+The direct `floatingAppearance` wins over
+`SafaehThemeData.floatingAppearance`. The overlay does not add a scrim; add
+one in the host when expanded behavior needs modal focus or outside-tap
+dismissal. `asDrawer` and `overlay` are mutually exclusive.
 
 ## `titleBuilder` / `labelBuilder`
 

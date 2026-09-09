@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'floating_surface.dart';
+import 'floating_surface_renderer.dart';
 import 'theme.dart';
 
 /// Overlay chrome for a camera QR preview: viewfinder, success wash, top bar,
@@ -24,6 +26,7 @@ class SafaehQrScannerOverlay extends StatelessWidget {
     this.expandTooltip,
     this.collapseTooltip,
     this.motion,
+    this.floatingAppearance,
   });
 
   final Animation<double> scanLine;
@@ -41,6 +44,7 @@ class SafaehQrScannerOverlay extends StatelessWidget {
   final String? expandTooltip;
   final String? collapseTooltip;
   final Duration? motion;
+  final SafaehFloatingAppearance? floatingAppearance;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +93,7 @@ class SafaehQrScannerOverlay extends StatelessWidget {
               expandTooltip: expandTooltip,
               collapseTooltip: collapseTooltip,
               motion: duration,
+              floatingAppearance: floatingAppearance,
             ),
             const Spacer(),
             if (hint != null)
@@ -122,6 +127,7 @@ class SafaehQrTopBar extends StatelessWidget {
     this.expandTooltip,
     this.collapseTooltip,
     this.motion = Duration.zero,
+    this.floatingAppearance,
   });
 
   final Widget title;
@@ -132,40 +138,48 @@ class SafaehQrTopBar extends StatelessWidget {
   final String? expandTooltip;
   final String? collapseTooltip;
   final Duration motion;
+  final SafaehFloatingAppearance? floatingAppearance;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.55),
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
-            children: [
-              IconButton(
-                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                onPressed: onClose,
-                icon: const Icon(Icons.close, color: Colors.white),
-              ),
-              Expanded(child: title),
-              torch ?? const SizedBox(width: 48),
-              IconButton(
-                tooltip: expanded ? collapseTooltip : expandTooltip,
-                onPressed: onToggleExpanded,
-                icon: AnimatedSwitcher(
-                  duration: motion,
-                  child: Icon(
-                    expanded ? Icons.close_fullscreen : Icons.open_in_full,
-                    key: ValueKey(expanded),
-                    color: Colors.white,
-                  ),
+    final appearance =
+        floatingAppearance ?? SafaehTheme.of(context).floatingAppearance;
+    final bar = SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              onPressed: onClose,
+              icon: const Icon(Icons.close, color: Colors.white),
+            ),
+            Expanded(child: title),
+            torch ?? const SizedBox(width: 48),
+            IconButton(
+              tooltip: expanded ? collapseTooltip : expandTooltip,
+              onPressed: onToggleExpanded,
+              icon: AnimatedSwitcher(
+                duration: motion,
+                child: Icon(
+                  expanded ? Icons.close_fullscreen : Icons.open_in_full,
+                  key: ValueKey(expanded),
+                  color: Colors.white,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+    if (appearance == null) {
+      return Material(color: Colors.black.withValues(alpha: 0.55), child: bar);
+    }
+    return SafaehFloatingSurface(
+      appearance: appearance,
+      fallbackColor: Colors.black.withValues(alpha: 0.55),
+      child: bar,
     );
   }
 }
@@ -274,7 +288,8 @@ class SafaehQrFramePainter extends CustomPainter {
       ..fillType = PathFillType.evenOdd;
     canvas.drawPath(dim, _dimPaint);
 
-    final accent = this.accent ?? (success ? const Color(0xFF66BB6A) : Colors.white);
+    final accent =
+        this.accent ?? (success ? const Color(0xFF66BB6A) : Colors.white);
     final cornerPaint = Paint()
       ..color = accent.withValues(alpha: 0.95)
       ..style = PaintingStyle.stroke

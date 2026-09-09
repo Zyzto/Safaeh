@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:safaeh/safaeh.dart';
 
 import 'catalog.dart';
 import 'theme_ripple.dart';
@@ -16,7 +17,7 @@ const Duration _kMenuIn = Duration(milliseconds: 180);
 const Duration _kMenuOut = Duration(milliseconds: 120);
 const Duration _kGlobeSwivel = Duration(milliseconds: 640);
 
-/// Language menu + light/dark.
+/// Language, light/dark, and floating-surface appearance controls.
 ///
 /// Lives in [MaterialApp.builder] **above** the navigator so gallery scroll
 /// cannot steal taps. That layer has no [Overlay], so this menu is a local
@@ -27,14 +28,18 @@ class CatalogAppearanceToggles extends StatefulWidget {
     super.key,
     required this.localeCode,
     required this.themeMode,
+    required this.floatingStyle,
     required this.onSelectLocale,
     required this.onToggleTheme,
+    required this.onCycleFloatingStyle,
   });
 
   final String localeCode;
   final ThemeMode themeMode;
+  final SafaehFloatingSurfaceStyle floatingStyle;
   final ValueChanged<String> onSelectLocale;
   final VoidCallback onToggleTheme;
+  final VoidCallback onCycleFloatingStyle;
 
   @override
   State<CatalogAppearanceToggles> createState() =>
@@ -189,6 +194,8 @@ class _CatalogAppearanceTogglesState extends State<CatalogAppearanceToggles>
     final dark = widget.themeMode == ThemeMode.dark;
     final dir = Directionality.of(context);
     String t(String key) => translateCatalog(key, widget.localeCode);
+    final floatingLabel =
+        '${t('floating_appearance')}: ${widget.floatingStyle.name}';
     final buttonStyle = IconButton.styleFrom(
       foregroundColor: cs.onSurface,
       minimumSize: const Size(_kToggleSize, _kToggleSize),
@@ -291,6 +298,24 @@ class _CatalogAppearanceTogglesState extends State<CatalogAppearanceToggles>
                               ),
                             ),
                           ),
+                          Semantics(
+                            button: true,
+                            label: floatingLabel,
+                            child: IconButton(
+                              key: const ValueKey('floating_appearance_toggle'),
+                              style: buttonStyle,
+                              onPressed: widget.onCycleFloatingStyle,
+                              icon: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 280),
+                                switchInCurve: Curves.fastOutSlowIn,
+                                switchOutCurve: Curves.fastOutSlowIn,
+                                child: Icon(
+                                  _floatingStyleIcon(widget.floatingStyle),
+                                  key: ValueKey(widget.floatingStyle),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -300,7 +325,7 @@ class _CatalogAppearanceTogglesState extends State<CatalogAppearanceToggles>
                     Padding(
                       padding: const EdgeInsetsDirectional.only(
                         end:
-                            _kToggleSize +
+                            _kToggleSize * 2 +
                             (_kToggleSize - _kLanguageMenuWidth) / 2,
                       ),
                       child: FadeTransition(
@@ -327,6 +352,15 @@ class _CatalogAppearanceTogglesState extends State<CatalogAppearanceToggles>
       ],
     );
   }
+}
+
+IconData _floatingStyleIcon(SafaehFloatingSurfaceStyle style) {
+  return switch (style) {
+    SafaehFloatingSurfaceStyle.solid => Icons.layers_outlined,
+    SafaehFloatingSurfaceStyle.translucent => Icons.opacity,
+    SafaehFloatingSurfaceStyle.glass => Icons.blur_on,
+    SafaehFloatingSurfaceStyle.vista => Icons.blur_circular,
+  };
 }
 
 class _LanguageMenu extends StatelessWidget {

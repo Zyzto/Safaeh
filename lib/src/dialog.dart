@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'adaptive_sheet.dart';
+import 'floating_surface.dart';
+import 'floating_surface_renderer.dart';
 import 'theme.dart';
 
 /// Centered dialog. Optional [railWidthOf] shifts the panel off a host rail.
@@ -20,6 +22,7 @@ Future<T?> showSafaehDialog<T>({
   Curve? exitCurve,
   SafaehTransition? transition,
   bool useRootNavigator = true,
+  SafaehFloatingAppearance? floatingAppearance,
   SafaehRouteOptions? route,
 }) {
   final tokens = SafaehTheme.of(context);
@@ -29,6 +32,10 @@ Future<T?> showSafaehDialog<T>({
     context,
     motion ?? route?.motion ?? tokens.motion,
   );
+  final resolvedFloatingAppearance =
+      floatingAppearance ??
+      route?.floatingAppearance ??
+      tokens.floatingAppearance;
   final theme = Theme.of(context);
 
   return showGeneralDialog<T>(
@@ -50,10 +57,10 @@ Future<T?> showSafaehDialog<T>({
         exitCurve: exitCurve ?? route?.exitCurve ?? tokens.exitCurve,
         railWidthOf: railWidthOf ?? route?.railWidthOf,
         maxWidth: route?.maxWidth ?? tokens.dialogMaxWidth,
-        maxHeight:
-            route?.maxHeight ?? MediaQuery.sizeOf(context).height * 0.85,
+        maxHeight: route?.maxHeight ?? MediaQuery.sizeOf(context).height * 0.85,
         transition: transition ?? route?.fadeScale,
         useRootNavigator: resolvedRoot,
+        floatingAppearance: resolvedFloatingAppearance,
       );
     },
     transitionBuilder: (ctx, animation, secondaryAnimation, child) => child,
@@ -74,6 +81,7 @@ class _SafaehDialogHost extends StatelessWidget {
     this.maxHeight,
     this.transition,
     this.useRootNavigator = true,
+    this.floatingAppearance,
   });
 
   final WidgetBuilder builder;
@@ -88,12 +96,17 @@ class _SafaehDialogHost extends StatelessWidget {
   final double? maxHeight;
   final SafaehTransition? transition;
   final bool useRootNavigator;
+  final SafaehFloatingAppearance? floatingAppearance;
 
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    final isWide = SafaehTheme.of(context).isWide(context);
+    final tokens = SafaehTheme.of(context);
+    final isWide = tokens.isWide(context);
     final railWidth = isWide ? (railWidthOf?.call(context) ?? 0.0) : 0.0;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final appearance = floatingAppearance ?? tokens.floatingAppearance;
     Widget panel = ConstrainedBox(
       key: const ValueKey('safaeh_dialog_constraints'),
       constraints: BoxConstraints(
@@ -102,43 +115,49 @@ class _SafaehDialogHost extends StatelessWidget {
       ),
       child: builder(context),
     );
+    if (appearance != null) {
+      panel = SafaehFloatingSurface(
+        appearance: appearance,
+        fallbackColor: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(tokens.radius),
+        child: panel,
+      );
+    }
     final child = Align(alignment: Alignment.center, child: panel);
-    final entering =
-        (transition ?? (fadeScale ? safaehFadeScale : safaehFade))(
-          animation: openAnimation,
-          child: child,
-        );
+    final entering = (transition ?? (fadeScale ? safaehFadeScale : safaehFade))(
+      animation: openAnimation,
+      child: child,
+    );
 
     return SafaehTheme(
-      data: SafaehTheme.of(context).copyWith(
-        enterCurve: enterCurve,
-        exitCurve: exitCurve,
-      ),
+      data: SafaehTheme.of(
+        context,
+      ).copyWith(enterCurve: enterCurve, exitCurve: exitCurve),
       child: SafaehNavigatorScope(
-      useRootNavigator: useRootNavigator,
-      child: Stack(
-      fit: StackFit.expand,
-      children: [
-        if (barrierDismissible)
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => safaehPop(context),
-              child: const SizedBox.expand(),
+        useRootNavigator: useRootNavigator,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (barrierDismissible)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => safaehPop(context),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.only(bottom: viewInsets.bottom),
+              child: AnimatedPadding(
+                duration: motion,
+                curve: enterCurve,
+                padding: EdgeInsetsDirectional.only(start: railWidth),
+                child: SafeArea(child: entering),
+              ),
             ),
-          ),
-        Padding(
-          padding: EdgeInsets.only(bottom: viewInsets.bottom),
-          child: AnimatedPadding(
-            duration: motion,
-            curve: enterCurve,
-            padding: EdgeInsetsDirectional.only(start: railWidth),
-            child: SafeArea(child: entering),
-          ),
+          ],
         ),
-      ],
-    ),
-    ),
+      ),
     );
   }
 }

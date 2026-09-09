@@ -215,10 +215,7 @@ class GallerySection extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: child,
-            ),
+            child: Padding(padding: const EdgeInsets.all(12), child: child),
           ),
         ),
       ],
@@ -254,8 +251,12 @@ Widget galleryPreview(String id, String Function(String key) t) {
       return SizedBox(height: 360, child: SidenavRailDemo(t: t));
     case 'sidenav_drawer':
       return SizedBox(height: 360, child: SidenavDrawerDemo(t: t));
+    case 'sidenav_overlay':
+      return SizedBox(height: 360, child: SidenavOverlayDemo(t: t));
     case 'floating_nav':
       return SizedBox(height: 240, child: FloatingNavDemo(t: t));
+    case 'floating_surface':
+      return SizedBox(height: 360, child: FloatingSurfaceStylesDemo());
     case 'page_index':
       return SizedBox(height: 280, child: PageIndexRailDemo(t: t));
     case 'page_index_overlay':
@@ -353,9 +354,7 @@ Widget catalogPhonePreview(
   switch (id) {
     case 'sheet':
     case 'sheet_morph':
-      return modal(
-        AdaptiveSheetDemo(t: t, raised: raised),
-      );
+      return modal(AdaptiveSheetDemo(t: t, raised: raised));
     case 'picker':
       return modal(
         PhoneSheetFrame(
@@ -426,8 +425,12 @@ Widget catalogPhonePreview(
       return SizedBox.expand(child: SidenavRailDemo(t: t));
     case 'sidenav_drawer':
       return SizedBox.expand(child: SidenavDrawerDemo(t: t));
+    case 'sidenav_overlay':
+      return SizedBox.expand(child: SidenavOverlayDemo(t: t));
     case 'floating_nav':
       return SizedBox.expand(child: FloatingNavDemo(t: t));
+    case 'floating_surface':
+      return SizedBox.expand(child: FloatingSurfaceStylesDemo());
     case 'page_index':
       return SizedBox.expand(child: PageIndexRailDemo(t: t));
     case 'page_index_overlay':

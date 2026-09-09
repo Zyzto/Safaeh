@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'floating_surface.dart';
+import 'floating_surface_renderer.dart';
 import 'sheet_handle_drag.dart';
 import 'sheet_shell.dart';
 import 'theme.dart';
@@ -59,6 +61,7 @@ class SafaehRouteOptions {
     this.useRootNavigator,
     this.dismissLabel,
     this.closeTooltip,
+    this.floatingAppearance,
   });
 
   final double Function(BuildContext context)? railWidthOf;
@@ -79,6 +82,9 @@ class SafaehRouteOptions {
 
   /// Tablet header close. Defaults to Material close tooltip.
   final String? closeTooltip;
+
+  /// Appearance inherited by package-owned floating surfaces on this route.
+  final SafaehFloatingAppearance? floatingAppearance;
 }
 
 /// Where a phone sheet sits. Tablet+ dialogs stay centered.
@@ -177,6 +183,7 @@ Future<T?> showSafaeh<T>({
   String? dismissLabel,
   String? closeTooltip,
   bool paintPhoneTitle = true,
+  SafaehFloatingAppearance? floatingAppearance,
   SafaehRouteOptions? route,
 }) {
   final tokens = SafaehTheme.of(context);
@@ -197,6 +204,10 @@ Future<T?> showSafaeh<T>({
   final resolvedBreakpoint = tabletBreakpoint ?? route?.tabletBreakpoint;
   final resolvedDismissLabel = dismissLabel ?? route?.dismissLabel;
   final resolvedCloseTooltip = closeTooltip ?? route?.closeTooltip;
+  final resolvedFloatingAppearance =
+      floatingAppearance ??
+      route?.floatingAppearance ??
+      tokens.floatingAppearance;
   final theme = Theme.of(context);
 
   return showGeneralDialog<T>(
@@ -235,6 +246,7 @@ Future<T?> showSafaeh<T>({
         dismissLabel: resolvedDismissLabel,
         closeTooltip: resolvedCloseTooltip,
         paintPhoneTitle: paintPhoneTitle,
+        floatingAppearance: resolvedFloatingAppearance,
         child: child,
       );
     },
@@ -297,8 +309,7 @@ class _SafaehPhoneCenterExtentState extends State<SafaehPhoneCenterExtent> {
     if (viewportH <= 0) return;
 
     final metrics = _safaehPhoneCenterMetricsOf(box);
-    final handleH =
-        metrics?.handleHeight ?? kSafaehPhoneHandleFallbackHeight;
+    final handleH = metrics?.handleHeight ?? kSafaehPhoneHandleFallbackHeight;
     final firstH =
         metrics?.firstContentHeight ?? kSafaehPhoneFirstContentFallbackHeight;
     final compactH = metrics?.compactHeight ?? 0;
@@ -329,7 +340,8 @@ class _SafaehPhoneCenterExtentState extends State<SafaehPhoneCenterExtent> {
     if (!widget.enabled) return widget.child;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final viewportH = constraints.maxHeight.isFinite && constraints.maxHeight > 0
+        final viewportH =
+            constraints.maxHeight.isFinite && constraints.maxHeight > 0
             ? constraints.maxHeight
             : MediaQuery.sizeOf(context).height;
         if ((viewportH - _measuredViewportH).abs() > 0.5) {
@@ -517,6 +529,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
     this.dismissLabel,
     this.closeTooltip,
     this.paintPhoneTitle = true,
+    this.floatingAppearance,
   });
 
   final Widget child;
@@ -547,6 +560,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
   final String? dismissLabel;
   final String? closeTooltip;
   final bool paintPhoneTitle;
+  final SafaehFloatingAppearance? floatingAppearance;
 
   @override
   Widget build(BuildContext context) {
@@ -554,6 +568,8 @@ class _AdaptiveSheetHost extends StatelessWidget {
     final viewInsets = MediaQuery.viewInsetsOf(context);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final appearance =
+        floatingAppearance ?? SafaehTheme.of(context).floatingAppearance;
     final isWide = size.width >= tabletBreakpoint;
     final railWidth = isWide ? (railWidthOf?.call(context) ?? 0.0) : 0.0;
 
@@ -596,11 +612,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
     final Widget header = isWide
         ? DecoratedBox(
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: cs.outline,
-                ),
-              ),
+              border: Border(bottom: BorderSide(color: cs.outline)),
             ),
             child: Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 12, 12),
@@ -625,15 +637,9 @@ class _AdaptiveSheetHost extends StatelessWidget {
                   IconButton(
                     tooltip:
                         closeTooltip ??
-                        MaterialLocalizations.of(
-                          context,
-                        ).closeButtonTooltip,
+                        MaterialLocalizations.of(context).closeButtonTooltip,
                     onPressed: () => safaehPop(context, dismissValue),
-                    icon: Icon(
-                      Icons.close,
-                      size: 22,
-                      color: cs.onSurface,
-                    ),
+                    icon: Icon(Icons.close, size: 22, color: cs.onSurface),
                   ),
                 ],
               ),
@@ -646,9 +652,9 @@ class _AdaptiveSheetHost extends StatelessWidget {
               button: barrierDismissible,
               label: barrierDismissible
                   ? (dismissLabel ??
-                      MaterialLocalizations.of(
-                        context,
-                      ).modalBarrierDismissLabel)
+                        MaterialLocalizations.of(
+                          context,
+                        ).modalBarrierDismissLabel)
                   : null,
               onTap: barrierDismissible
                   ? () => safaehPop(context, dismissValue)
@@ -681,10 +687,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: header,
         ),
-        if (!isWide &&
-            paintPhoneTitle &&
-            showTitle &&
-            titleChild != null)
+        if (!isWide && paintPhoneTitle && showTitle && titleChild != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: titleChild,
@@ -708,17 +711,33 @@ class _AdaptiveSheetHost extends StatelessWidget {
     final outline = cs.outline;
 
     final Widget panel = sheetShape != null
-        ? Material(
-            key: const ValueKey('safaeh_panel'),
-            color: fill,
-            elevation: 0,
-            clipBehavior: Clip.antiAlias,
-            shape: sheetShape,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: effectiveMaxHeight),
-              child: panelBody,
-            ),
-          )
+        ? appearance == null
+              ? Material(
+                  key: const ValueKey('safaeh_panel'),
+                  color: fill,
+                  elevation: 0,
+                  clipBehavior: Clip.antiAlias,
+                  shape: sheetShape,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: effectiveMaxHeight),
+                    child: panelBody,
+                  ),
+                )
+              : KeyedSubtree(
+                  key: const ValueKey('safaeh_panel'),
+                  child: SafaehFloatingSurface(
+                    appearance: appearance,
+                    fallbackColor: fill,
+                    fallbackBorder: null,
+                    shape: sheetShape,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: effectiveMaxHeight,
+                      ),
+                      child: panelBody,
+                    ),
+                  ),
+                )
         : ConstrainedBox(
             constraints: BoxConstraints(maxHeight: effectiveMaxHeight),
             child: AnimatedContainer(
@@ -726,15 +745,28 @@ class _AdaptiveSheetHost extends StatelessWidget {
               duration: motion,
               curve: enterCurve,
               width: panelWidth,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(color: fill, borderRadius: panelRadius),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: panelRadius,
-                  border: Border.all(color: outline),
-                ),
-                child: Material(color: Colors.transparent, child: panelBody),
-              ),
+              clipBehavior: appearance == null ? Clip.antiAlias : Clip.none,
+              decoration: appearance == null
+                  ? BoxDecoration(color: fill, borderRadius: panelRadius)
+                  : null,
+              child: appearance == null
+                  ? DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: panelRadius,
+                        border: Border.all(color: outline),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: panelBody,
+                      ),
+                    )
+                  : SafaehFloatingSurface(
+                      appearance: appearance,
+                      fallbackColor: fill,
+                      fallbackBorder: Border.all(color: outline),
+                      borderRadius: panelRadius,
+                      child: panelBody,
+                    ),
             ),
           );
 
@@ -784,41 +816,40 @@ class _AdaptiveSheetHost extends StatelessWidget {
           );
 
     final host = SafaehTheme(
-      data: SafaehTheme.of(context).copyWith(
-        enterCurve: enterCurve,
-        exitCurve: exitCurve,
-      ),
+      data: SafaehTheme.of(
+        context,
+      ).copyWith(enterCurve: enterCurve, exitCurve: exitCurve),
       child: SafaehNavigatorScope(
-      useRootNavigator: useRootNavigator,
-      child: Stack(
-      fit: StackFit.expand,
-      children: [
-        if (barrierDismissible)
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => safaehPop(context, dismissValue),
-              child: const SizedBox.expand(),
+        useRootNavigator: useRootNavigator,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (barrierDismissible)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => safaehPop(context, dismissValue),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.only(bottom: viewInsets.bottom),
+              child: AnimatedPadding(
+                duration: motion,
+                curve: enterCurve,
+                padding: EdgeInsetsDirectional.only(start: railWidth),
+                child: SafeArea(
+                  top: useSafeArea && isWide,
+                  bottom: useSafeArea && !isWide && viewInsets.bottom <= 0,
+                  left: false,
+                  right: false,
+                  child: entering,
+                ),
+              ),
             ),
-          ),
-        Padding(
-          padding: EdgeInsets.only(bottom: viewInsets.bottom),
-          child: AnimatedPadding(
-            duration: motion,
-            curve: enterCurve,
-            padding: EdgeInsetsDirectional.only(start: railWidth),
-            child: SafeArea(
-              top: useSafeArea && isWide,
-              bottom: useSafeArea && !isWide && viewInsets.bottom <= 0,
-              left: false,
-              right: false,
-              child: entering,
-            ),
-          ),
+          ],
         ),
-      ],
-    ),
-    ),
+      ),
     );
     return PopScope(
       canPop: false,

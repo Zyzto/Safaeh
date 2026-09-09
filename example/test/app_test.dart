@@ -105,6 +105,27 @@ void main() {
     }
   });
 
+  testWidgets(
+    'floating appearance fixture renders every preset over contrast',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: FloatingSurfaceStylesDemo()),
+      );
+
+      expect(find.byType(SafaehFloatingNavBar), findsNWidgets(4));
+      for (final style in SafaehFloatingSurfaceStyle.values) {
+        expect(
+          find.byKey(ValueKey('floating_style_${style.name}')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(ValueKey('floating_style_nav_${style.name}')),
+          findsOneWidget,
+        );
+      }
+    },
+  );
+
   testWidgets('language menu lists five Fukaha locales and applies one', (
     tester,
   ) async {
@@ -264,12 +285,29 @@ void main() {
     expect(tester.takeException(), isNull);
 
     await _reveal(tester, 'sidenav_drawer');
-    expect(find.byKey(const ValueKey('safaeh_nav_expand')), findsNothing);
-    expect(find.text('Groups'), findsOneWidget);
+    final drawerSection = find.byKey(const ValueKey('catalog_sidenav_drawer'));
     expect(
-      find.byKey(const ValueKey('safaeh_nav_profile_avatar')),
-      findsWidgets,
+      find.descendant(
+        of: drawerSection,
+        matching: find.byKey(const ValueKey('safaeh_nav_expand')),
+      ),
+      findsNothing,
     );
+    expect(
+      find.descendant(of: drawerSection, matching: find.text('Groups')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: drawerSection,
+        matching: find.byKey(const ValueKey('safaeh_nav_profile_avatar')),
+      ),
+      findsOneWidget,
+    );
+
+    await _reveal(tester, 'sidenav_overlay');
+    expect(find.byKey(const ValueKey('safaeh_nav_overlay')), findsOneWidget);
+    expect(find.text('This is the selected destination.'), findsWidgets);
 
     await _reveal(tester, 'floating_nav');
     expect(find.text('This is the selected destination.'), findsOneWidget);
@@ -415,6 +453,35 @@ void main() {
     );
     expect(find.byIcon(Icons.dark_mode_outlined), findsOneWidget);
     expect(find.byIcon(Icons.light_mode_outlined), findsNothing);
+  });
+
+  testWidgets('floating appearance toggle cycles surface styles', (
+    tester,
+  ) async {
+    await pumpExampleApp(tester);
+
+    final home = find.byType(CatalogHome);
+    SafaehFloatingSurfaceStyle appearance() =>
+        SafaehTheme.of(tester.element(home)).floatingAppearance!.style;
+
+    expect(
+      find.byKey(const ValueKey('floating_appearance_toggle')),
+      findsOneWidget,
+    );
+    expect(appearance(), SafaehFloatingSurfaceStyle.solid);
+
+    for (final style in [
+      SafaehFloatingSurfaceStyle.translucent,
+      SafaehFloatingSurfaceStyle.glass,
+      SafaehFloatingSurfaceStyle.vista,
+      SafaehFloatingSurfaceStyle.solid,
+    ]) {
+      await tester.tap(
+        find.byKey(const ValueKey('floating_appearance_toggle')),
+      );
+      await tester.pumpAndSettle();
+      expect(appearance(), style);
+    }
   });
 
   testWidgets('toggles stay tappable over page-index overlay chrome', (
@@ -630,7 +697,13 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('safaeh_nav_expand')), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('catalog_phone_frame')),
+        matching: find.byKey(const ValueKey('safaeh_nav_expand')),
+      ),
+      findsNothing,
+    );
     await closePhone();
 
     frame = await openPhone('floating_nav');
@@ -870,6 +943,50 @@ void main() {
     final sectionBox = tester.getRect(section);
     final barBox = tester.getRect(bar);
     expect(barBox.bottom, closeTo(sectionBox.bottom, 24));
+  });
+
+  testWidgets('floating surface demo shows the background behind each style', (
+    tester,
+  ) async {
+    await pumpExampleApp(tester);
+
+    await _reveal(tester, 'floating_surface');
+    final section = find.byKey(const ValueKey('catalog_floating_surface'));
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.byKey(const ValueKey('floating_style_theme')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.byKey(const ValueKey('floating_style_nav_theme')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.byKey(const ValueKey('floating_style_backdrop_0')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.byKey(const ValueKey('floating_style_backdrop_4')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.byType(ExcludeFocusTraversal),
+      ),
+      findsNWidgets(5),
+    );
   });
 
   testWidgets('gallery camera and QR panels fit their cards', (tester) async {

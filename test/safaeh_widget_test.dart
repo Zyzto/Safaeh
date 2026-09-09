@@ -120,6 +120,96 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('sidenav leading marks keep their column when the rail expands', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var collapsed = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  SafaehSidenav(
+                    title: 'Hisab',
+                    collapsed: collapsed,
+                    onToggleCompact: () =>
+                        setState(() => collapsed = !collapsed),
+                    selectedIndex: 0,
+                    onDestinationSelected: (_) {},
+                    destinations: const [
+                      SafaehSidenavDestination(
+                        label: 'Groups',
+                        icon: Icons.group_outlined,
+                        selectedIcon: Icons.group,
+                      ),
+                    ],
+                    profile: SafaehSidenavProfile(
+                      label: 'Ada Lovelace',
+                      onTap: () {},
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    final collapsedIconX = tester.getCenter(find.byIcon(Icons.group)).dx;
+    final collapsedAvatarX = tester
+        .getCenter(find.byKey(const ValueKey('safaeh_nav_profile_avatar')))
+        .dx;
+
+    await tester.tap(find.byKey(const ValueKey('safaeh_nav_expand')));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      tester.getCenter(find.byIcon(Icons.group)).dx,
+      closeTo(collapsedIconX, 0.01),
+    );
+    expect(
+      tester
+          .getCenter(find.byKey(const ValueKey('safaeh_nav_profile_avatar')))
+          .dx,
+      closeTo(collapsedAvatarX, 0.01),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getCenter(find.byIcon(Icons.group)).dx,
+      closeTo(collapsedIconX, 0.01),
+    );
+    expect(
+      tester
+          .getCenter(find.byKey(const ValueKey('safaeh_nav_profile_avatar')))
+          .dx,
+      closeTo(collapsedAvatarX, 0.01),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('safaeh_nav_collapse')));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(
+      tester.getCenter(find.byIcon(Icons.group)).dx,
+      closeTo(collapsedIconX, 0.01),
+    );
+    expect(
+      tester
+          .getCenter(find.byKey(const ValueKey('safaeh_nav_profile_avatar')))
+          .dx,
+      closeTo(collapsedAvatarX, 0.01),
+    );
+  });
+
   testWidgets('confirm sheet phone cancel pops false and confirm pops true', (
     tester,
   ) async {
@@ -506,6 +596,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.settings), findsOneWidget);
     expect(selected, 1);
+  });
+
+  testWidgets('floating nav defaults to a transparent background', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafaehFloatingNavBar(
+            selectedIndex: 0,
+            onDestinationSelected: (_) {},
+            destinations: const [
+              SafaehSidenavDestination(
+                label: 'Home',
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final bar = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(SafaehFloatingNavBar),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is Container && widget.decoration != null,
+        ),
+      ),
+    );
+    final decoration = bar.decoration! as BoxDecoration;
+    expect(decoration.color, Colors.transparent);
   });
 
   testWidgets('floating nav destination labelBuilder is used', (tester) async {
@@ -1038,16 +1161,16 @@ void main() {
     expect(find.text('No matches'), findsOneWidget);
   });
 
-  testWidgets('tile search empty chrome falls back to the hint', (tester) async {
+  testWidgets('tile search empty chrome falls back to the hint', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
           body: SafaehTilePickerBody<String>(
             title: 'Accounts',
             searchHint: 'Search',
-            options: [
-              SafaehTileOption(value: 'cash', label: 'Cash'),
-            ],
+            options: [SafaehTileOption(value: 'cash', label: 'Cash')],
           ),
         ),
       ),
@@ -1063,7 +1186,9 @@ void main() {
     expect(find.text('Cash'), findsNothing);
   });
 
-  testWidgets('tileBuilder stays visual; the body owns the tap', (tester) async {
+  testWidgets('tileBuilder stays visual; the body owns the tap', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

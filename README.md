@@ -99,9 +99,9 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 |------|----------------|
 | **Sheets** | `showSafaeh` morphs phone sheet ↔ tablet dialog; `showSafaehPicker` / `SafaehOption` (cards, `enabled`); `showSafaehTilePicker` / `SafaehTileOption` (list rows, search); `showSafaehMultiTilePicker` (multi-select); `showSafaehConfirm`, `showSafaehTextInput`, `SafaehStatusBody`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile` |
 | **Dialog** | `showSafaehDialog` centered panel with optional `railWidthOf` |
-| **Theme** | `SafaehTheme` / `SafaehThemeData` for breakpoint, motion, radius, rail widths, camera compact height, `contentMaxWidth`; `copyWith` |
+| **Theme** | `SafaehTheme` / `SafaehThemeData` for breakpoint, motion, radius, rail widths, camera compact height, `contentMaxWidth`, `floatingAppearance`; `copyWith` |
 | **Motion** | `safaehResolvedMotion` zeros durations when animations are disabled |
-| **Nav** | `SafaehSidenav` temporary drawer (`asDrawer: true`) or clipping rail; `SafaehFloatingNavBar` (same `SafaehSidenavDestination`) |
+| **Nav** | `SafaehSidenav` temporary drawer (`asDrawer: true`), clipping rail, or overlay rail (`overlay: true`); `SafaehFloatingNavBar` (same `SafaehSidenavDestination`) |
 | **Page index** | `SafaehPageIndex`, overlay, `scrollToPageSection`, `safaehActivePageSectionId` (ids + keys only — no `.tr()` on scroll) |
 | **Content** | `safaehBandMetrics`, `SafaehContentBand`, `SafaehEndAsideLayout`, `SafaehContentAlignedAppBar`, `SafaehContentAlignedFabLocation` |
 | **Camera** | `showSafaehCameraSheet` / `SafaehCameraSheetHost` paper-roll compact ↔ full |
@@ -116,7 +116,7 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 
 ```yaml
 dependencies:
-  safaeh: ^0.2.1
+  safaeh: ^0.2.2
 ```
 
 Or:
@@ -132,14 +132,14 @@ dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.2.1
+      ref: v0.2.2
 ```
 
 ```dart
 import 'package:safaeh/safaeh.dart';
 ```
 
-Current version: **0.2.1**.
+Current version: **0.2.2**.
 
 ---
 
@@ -313,7 +313,91 @@ SafaehContentAlignedFabLocation.resolve(
 
 See [doc/host-integration.md](doc/host-integration.md).
 
-### 8. Camera / QR chrome
+### 8. Overlay sidenav
+
+For a sidenav that expands over the page without reserving layout width, put
+the overlay rail above the host content in a `Stack`:
+
+```dart
+Stack(
+  fit: StackFit.expand,
+  children: [
+    const PageBody(),
+    SafaehSidenav(
+      overlay: true,
+      collapsed: collapsed,
+      onToggleCompact: () => setState(() => collapsed = !collapsed),
+      floatingAppearance: const SafaehFloatingAppearance(
+        style: SafaehFloatingSurfaceStyle.glass,
+      ),
+      title: 'Safaeh',
+      selectedIndex: index,
+      onDestinationSelected: onDestinationSelected,
+      destinations: destinations,
+    ),
+  ],
+);
+```
+
+The overlay inherits `SafaehThemeData.floatingAppearance` when the direct
+value is omitted. Its scrim, if needed, remains host-owned.
+
+### 9. Shared floating-surface appearance
+
+Package-owned floating chrome can inherit one appearance from
+`SafaehThemeData`, or override it on an individual widget or call:
+
+```dart
+const appearance = SafaehFloatingAppearance(
+  style: SafaehFloatingSurfaceStyle.glass,
+  transparency: 48, // 0 = opaque, 100 = fully transparent
+  blurSigma: 18,
+  tintColor: Color(0xFFF7F0E5),
+);
+
+SafaehTheme(
+  data: const SafaehThemeData(floatingAppearance: appearance),
+  child: const MyApp(),
+);
+
+SafaehFloatingNavBar(
+  floatingAppearance: const SafaehFloatingAppearance(
+    style: SafaehFloatingSurfaceStyle.vista,
+  ),
+  selectedIndex: index,
+  onDestinationSelected: (i) => setState(() => index = i),
+  destinations: destinations,
+);
+```
+
+The presets are `solid`, `translucent`, `glass` (iOS-like), and `vista`
+(Vista/Aero-like). `transparency`, `blurSigma`, `tintColor`, `border`, and
+`shadows` are nullable preset overrides. For sheets and dialogs, a call wins
+over `SafaehRouteOptions.floatingAppearance`, which wins over the theme:
+
+```dart
+await showSafaeh<void>(
+  context: context,
+  route: const SafaehRouteOptions(
+    floatingAppearance: SafaehFloatingAppearance(
+      style: SafaehFloatingSurfaceStyle.translucent,
+    ),
+  ),
+  floatingAppearance: const SafaehFloatingAppearance(
+    style: SafaehFloatingSurfaceStyle.glass,
+  ),
+  child: const MySheetBody(),
+);
+```
+
+The treatment applies to package-owned shells: the floating nav, overlay
+sidenav, narrow page-index trigger/popover, sheet and dialog shells, camera
+panel, and QR top bar. Scrims, previews, host children, QR message content,
+wide page-index rails, and host-owned FABs remain unchanged. With no appearance
+configured, existing rendering is retained, including the floating nav's
+transparent default.
+
+### 10. Camera / QR chrome
 
 ```dart
 await showSafaehCameraSheet<void>(

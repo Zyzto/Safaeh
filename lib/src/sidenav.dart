@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'floating_surface.dart';
+import 'floating_surface_renderer.dart';
 import 'rtl.dart';
 import 'theme.dart';
 
@@ -120,8 +122,12 @@ class SafaehSidenavProfile {
   final SafaehLabelBuilder? labelBuilder;
 }
 
-/// Temporary drawer (mid) or clipping rail (desktop). Collapse hides labels
-/// inside the current width so icons do not slide — including in RTL.
+/// Temporary drawer (mid), clipping rail (desktop), or overlay rail.
+///
+/// Set [overlay] to place the rail above sibling content when this widget is
+/// mounted in a [Stack]. The overlay inherits
+/// [SafaehThemeData.floatingAppearance] unless [floatingAppearance] is
+/// supplied directly.
 class SafaehSidenav extends StatelessWidget {
   const SafaehSidenav({
     super.key,
@@ -132,6 +138,7 @@ class SafaehSidenav extends StatelessWidget {
     this.profile,
     this.footer,
     this.asDrawer = false,
+    this.overlay = false,
     this.collapsed = false,
     this.onToggleCompact,
     this.expandTooltip,
@@ -139,10 +146,14 @@ class SafaehSidenav extends StatelessWidget {
     this.compactWidth,
     this.expandedWidth,
     this.duration,
+    this.floatingAppearance,
     this.railKey = const ValueKey('safaeh_nav_rail'),
     this.expandKey = const ValueKey('safaeh_nav_expand'),
     this.collapseKey = const ValueKey('safaeh_nav_collapse'),
-  });
+  }) : assert(
+         !(asDrawer && overlay),
+         'asDrawer and overlay cannot both be true',
+       );
 
   final String title;
   final List<SafaehSidenavDestination> destinations;
@@ -151,6 +162,9 @@ class SafaehSidenav extends StatelessWidget {
   final SafaehSidenavProfile? profile;
   final Widget? footer;
   final bool asDrawer;
+
+  /// When true, mount this widget in a [Stack] to overlay sibling content.
+  final bool overlay;
   final bool collapsed;
   final VoidCallback? onToggleCompact;
   final String? expandTooltip;
@@ -158,6 +172,9 @@ class SafaehSidenav extends StatelessWidget {
   final double? compactWidth;
   final double? expandedWidth;
   final Duration? duration;
+
+  /// Appearance used by overlay mode. When omitted, inherits the theme value.
+  final SafaehFloatingAppearance? floatingAppearance;
   final Key railKey;
   final Key expandKey;
   final Key collapseKey;
@@ -201,6 +218,7 @@ class SafaehSidenav extends StatelessWidget {
               collapsed: !asDrawer && collapsed,
               fill: chrome.fill,
               onFill: chrome.onFill,
+              iconColumnWidth: compact,
               labelBuilder: destinations[i].labelBuilder,
               onTap: () => onDestinationSelected(i),
             ),
@@ -214,6 +232,7 @@ class SafaehSidenav extends StatelessWidget {
               collapsed: !asDrawer && collapsed,
               fill: chrome.fill,
               onFill: chrome.onFill,
+              iconColumnWidth: compact,
               leading:
                   profile!.leading ??
                   SafaehSidenavAvatar(
@@ -227,7 +246,7 @@ class SafaehSidenav extends StatelessWidget {
           if (footer != null)
             Padding(
               padding: EdgeInsetsDirectional.only(
-                start: asDrawer ? 20 : compact,
+                start: compact,
                 end: 16,
                 top: 4,
                 bottom: 12,
@@ -242,14 +261,42 @@ class SafaehSidenav extends StatelessWidget {
       return body;
     }
 
-    return AnimatedContainer(
+    final rail = AnimatedContainer(
       key: railKey,
       duration: motion,
       curve: Curves.fastOutSlowIn,
       width: width,
+      height: overlay ? double.infinity : null,
       clipBehavior: Clip.hardEdge,
-      color: chrome.fill,
+      color: overlay ? Colors.transparent : chrome.fill,
       child: body,
+    );
+
+    if (!overlay) return rail;
+
+    final appearance = floatingAppearance ?? tokens.floatingAppearance;
+    final overlayRadius = BorderRadiusDirectional.only(
+      topEnd: Radius.circular(tokens.radius),
+      bottomEnd: Radius.circular(tokens.radius),
+    );
+    final overlayShadows = [
+      BoxShadow(
+        color: cs.shadow.withValues(alpha: 0.24),
+        blurRadius: 18,
+        offset: const Offset(2, 0),
+      ),
+    ];
+    final surface = SafaehFloatingSurface(
+      appearance: appearance ?? const SafaehFloatingAppearance(),
+      fallbackColor: chrome.fill,
+      fallbackBorder: Border.all(color: cs.outline.withValues(alpha: 0.36)),
+      fallbackShadows: overlayShadows,
+      borderRadius: overlayRadius,
+      child: rail,
+    );
+
+    return SizedBox.expand(
+      child: Align(alignment: AlignmentDirectional.topStart, child: surface),
     );
   }
 }
@@ -295,7 +342,12 @@ class _Header extends StatelessWidget {
 
     if (asDrawer || onToggleCompact == null) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+        padding: EdgeInsetsDirectional.fromSTEB(
+          asDrawer ? compactWidth : 20,
+          16,
+          20,
+          8,
+        ),
         child: titleWidget,
       );
     }
@@ -339,6 +391,7 @@ class _NavTile extends StatelessWidget {
     this.trailing,
     this.subtitle,
     this.labelBuilder,
+    this.iconColumnWidth,
   });
 
   final Key tileKey;
@@ -353,6 +406,7 @@ class _NavTile extends StatelessWidget {
   final Color onFill;
   final VoidCallback onTap;
   final SafaehLabelBuilder? labelBuilder;
+  final double? iconColumnWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -394,8 +448,47 @@ class _NavTile extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final mark = leading ?? Icon(icon, color: color);
-              // Compact rail (~72) and mid-expand frames: center the mark so a
-              // 36px profile plate does not overflow the 8+16 tile padding.
+              // Keep the leading column fixed for both rails and drawers.
+              // The outer tile padding and row padding consume 32px, so the
+              // slot's center lines up with the compact rail's center.
+              if (iconColumnWidth != null) {
+                final slotWidth = (iconColumnWidth! - 32).clamp(
+                  0.0,
+                  double.infinity,
+                );
+                if (constraints.maxWidth < slotWidth) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Center(child: mark),
+                  );
+                }
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: slotWidth,
+                        child: Center(child: mark),
+                      ),
+                      if (!collapsed)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              start: 12,
+                            ),
+                            child: labelColumn,
+                          ),
+                        ),
+                      if (!collapsed &&
+                          trailing != null &&
+                          constraints.maxWidth >= 120)
+                        trailing!,
+                    ],
+                  ),
+                );
+              }
+              // Retain the original centered fallback for callers that do
+              // not provide a fixed leading column.
               if (constraints.maxWidth < 88) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -452,11 +545,7 @@ class _NavTile extends StatelessWidget {
         child: Tooltip(message: plain ?? label, child: tile),
       );
     }
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: tile,
-    );
+    return Semantics(button: true, selected: selected, child: tile);
   }
 
   Widget _labelText({

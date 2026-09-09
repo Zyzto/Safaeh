@@ -9,6 +9,7 @@ const catalogTranslations = <String, Map<String, String>>{
     'theme': 'Theme',
     'theme_light': 'Light',
     'theme_dark': 'Dark',
+    'floating_appearance': 'Floating appearance',
     'preview_phone': 'Phone layout',
     'sheet_placement_center':
         'Raise the sheet so the first content center aligns with the phone center',
@@ -45,8 +46,12 @@ const catalogTranslations = <String, Map<String, String>>{
     'sidenav_sub': 'Collapsed and expanded',
     'sidenav_drawer': 'Sidenav drawer',
     'sidenav_drawer_sub': 'Temporary drawer over a host',
+    'sidenav_overlay': 'Sidenav overlay',
+    'sidenav_overlay_sub': 'Expands over content with a floating surface',
     'floating_nav': 'Floating nav',
     'floating_nav_sub': 'Phone destination bar',
+    'floating_surface': 'Floating surfaces',
+    'floating_surface_sub': 'Transparency and blur over a patterned background',
     'page_index': 'Page index',
     'page_index_sub': 'Rail, overlay, and scroll helper',
     'page_index_overlay': 'Page index overlay',
@@ -131,6 +136,7 @@ const catalogTranslations = <String, Map<String, String>>{
     'theme': 'المظهر',
     'theme_light': 'فاتح',
     'theme_dark': 'داكن',
+    'floating_appearance': 'مظهر الأسطح العائمة',
     'preview_phone': 'تخطيط الهاتف',
     'sheet_placement_center': 'رفع الورقة حتى يحاذي مركز أول محتوى مركز الهاتف',
     'sheet_placement_bottom': 'ورقة سفلية مدمجة',
@@ -166,8 +172,12 @@ const catalogTranslations = <String, Map<String, String>>{
     'sidenav_sub': 'مطوية وموسّعة',
     'sidenav_drawer': 'درج جانبي',
     'sidenav_drawer_sub': 'درج مؤقت فوق المضيف',
+    'sidenav_overlay': 'سكة جانبية عائمة',
+    'sidenav_overlay_sub': 'تتوسع فوق المحتوى بسطح عائم',
     'floating_nav': 'شريط عائم',
     'floating_nav_sub': 'شريط وجهات للهاتف',
+    'floating_surface': 'الأسطح العائمة',
+    'floating_surface_sub': 'الشفافية والضبابية فوق خلفية منقوشة',
     'page_index': 'فهرس الصفحة',
     'page_index_sub': 'سكة، طبقة عائمة، وتمرير للأقسام',
     'page_index_overlay': 'فهرس عائم',
@@ -252,6 +262,7 @@ const catalogTranslations = <String, Map<String, String>>{
     'theme': 'テーマ',
     'theme_light': 'ライト',
     'theme_dark': 'ダーク',
+    'floating_appearance': 'フローティング外観',
     'preview_phone': 'スマホレイアウト',
     'sheet_placement_center': '最初の内容の中央が端末の中央に揃うようシートを上げる',
     'sheet_placement_bottom': 'コンパクトな下シート',
@@ -287,8 +298,12 @@ const catalogTranslations = <String, Map<String, String>>{
     'sidenav_sub': '折りたたみと展開',
     'sidenav_drawer': 'サイドナビゲーションドロワー',
     'sidenav_drawer_sub': 'ホストの上の一時ドロワー',
+    'sidenav_overlay': 'サイドナビゲーションオーバーレイ',
+    'sidenav_overlay_sub': 'フローティングサーフェスでコンテンツに重なる',
     'floating_nav': 'フローティングナビ',
     'floating_nav_sub': '電話の行き先バー',
+    'floating_surface': 'フローティングサーフェス',
+    'floating_surface_sub': 'パターン背景上の透明度とぼかし',
     'page_index': 'ページ索引',
     'page_index_sub': 'レール・オーバーレイ・スクロール',
     'page_index_overlay': 'ページ索引オーバーレイ',
@@ -372,6 +387,7 @@ const catalogTranslations = <String, Map<String, String>>{
     'theme': '主题',
     'theme_light': '浅色',
     'theme_dark': '深色',
+    'floating_appearance': '浮动外观',
     'preview_phone': '手机布局',
     'sheet_placement_center': '升高弹层使首块内容中心对齐手机中心',
     'sheet_placement_bottom': '使用紧凑底部弹层',
@@ -407,8 +423,12 @@ const catalogTranslations = <String, Map<String, String>>{
     'sidenav_sub': '折叠与展开',
     'sidenav_drawer': '侧栏抽屉',
     'sidenav_drawer_sub': '覆盖宿主的临时抽屉',
+    'sidenav_overlay': '侧栏浮层',
+    'sidenav_overlay_sub': '使用浮动表面覆盖内容并展开',
     'floating_nav': '浮动导航',
     'floating_nav_sub': '手机底部导航',
+    'floating_surface': '浮动表面',
+    'floating_surface_sub': '图案背景上的透明度和模糊',
     'page_index': '页面索引',
     'page_index_sub': '侧栏、浮层与滚动辅助',
     'page_index_overlay': '页面索引浮层',
@@ -492,6 +512,7 @@ const catalogTranslations = <String, Map<String, String>>{
     'theme': 'Tema',
     'theme_light': 'Claro',
     'theme_dark': 'Oscuro',
+    'floating_appearance': 'Apariencia flotante',
     'preview_phone': 'Diseño de teléfono',
     'sheet_placement_center':
         'Elevar la hoja para alinear el centro del primer contenido con el del teléfono',
@@ -528,8 +549,14 @@ const catalogTranslations = <String, Map<String, String>>{
     'sidenav_sub': 'Contraída y expandida',
     'sidenav_drawer': 'Cajón lateral',
     'sidenav_drawer_sub': 'Cajón temporal sobre el anfitrión',
+    'sidenav_overlay': 'Navegación lateral superpuesta',
+    'sidenav_overlay_sub':
+        'Se expande sobre el contenido con una superficie flotante',
     'floating_nav': 'Navegación flotante',
     'floating_nav_sub': 'Barra de destinos en el teléfono',
+    'floating_surface': 'Superficies flotantes',
+    'floating_surface_sub':
+        'Transparencia y desenfoque sobre un fondo estampado',
     'page_index': 'Índice de página',
     'page_index_sub': 'Rail, overlay y desplazamiento',
     'page_index_overlay': 'Índice flotante',
@@ -698,10 +725,7 @@ Widget catalogIsolateLabel(String data, TextStyle? style) {
     overflow: TextOverflow.ellipsis,
   );
   if (data.contains('@')) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: text,
-    );
+    return Directionality(textDirection: TextDirection.ltr, child: text);
   }
   return text;
 }
@@ -760,9 +784,19 @@ const catalogItems = <CatalogItem>[
     subtitleKey: 'sidenav_drawer_sub',
   ),
   CatalogItem(
+    id: 'sidenav_overlay',
+    titleKey: 'sidenav_overlay',
+    subtitleKey: 'sidenav_overlay_sub',
+  ),
+  CatalogItem(
     id: 'floating_nav',
     titleKey: 'floating_nav',
     subtitleKey: 'floating_nav_sub',
+  ),
+  CatalogItem(
+    id: 'floating_surface',
+    titleKey: 'floating_surface',
+    subtitleKey: 'floating_surface_sub',
   ),
   CatalogItem(
     id: 'page_index',

@@ -10,6 +10,21 @@ See [VERSIONING.md](VERSIONING.md).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-09
+
+### Added
+- Shared `SafaehFloatingAppearance` options for transparent, translucent,
+  iOS-style glass, and Vista/Aero-style glass package-owned floating surfaces.
+- Theme, route, widget, and call-level appearance configuration with clipped
+  backdrop blur, tint, border, and shadow overrides. Existing defaults remain
+  unchanged when no appearance is configured.
+- Added `SafaehSidenav(overlay: true)` for start-aligned rails that expand over
+  host content and inherit the shared floating-surface appearance.
+
+### Docs
+- Added floating-surface and overlay-sidenav usage examples plus
+  host-integration precedence notes.
+
 ## [0.2.1] - 2026-08-22
 
 Pin Flutter 3.47.1 with FVM so local, IDE, and CI use the same SDK.

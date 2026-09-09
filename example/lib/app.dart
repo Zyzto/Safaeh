@@ -69,6 +69,7 @@ class SafaehExampleApp extends StatefulWidget {
 class _SafaehExampleAppState extends State<SafaehExampleApp> {
   late String _locale;
   late ThemeMode _themeMode;
+  late SafaehFloatingSurfaceStyle _floatingStyle;
 
   @override
   void initState() {
@@ -77,15 +78,17 @@ class _SafaehExampleAppState extends State<SafaehExampleApp> {
     _themeMode = widget.initialThemeMode == ThemeMode.dark
         ? ThemeMode.dark
         : ThemeMode.light;
+    _floatingStyle = SafaehFloatingSurfaceStyle.solid;
   }
 
   @override
   Widget build(BuildContext context) {
     return SafaehTheme(
-      data: const SafaehThemeData(
+      data: SafaehThemeData(
         tabletBreakpoint: 600,
         dialogMaxWidth: 560,
         contentMaxWidth: 600,
+        floatingAppearance: SafaehFloatingAppearance(style: _floatingStyle),
       ),
       child: MaterialApp(
         title: translateCatalog('app_title', _locale),
@@ -105,11 +108,18 @@ class _SafaehExampleAppState extends State<SafaehExampleApp> {
             overlay: CatalogAppearanceToggles(
               localeCode: _locale,
               themeMode: _themeMode,
+              floatingStyle: _floatingStyle,
               onSelectLocale: (code) => setState(() => _locale = code),
               onToggleTheme: () => setState(() {
                 _themeMode = _themeMode == ThemeMode.dark
                     ? ThemeMode.light
                     : ThemeMode.dark;
+              }),
+              onCycleFloatingStyle: () => setState(() {
+                final styles = SafaehFloatingSurfaceStyle.values;
+                _floatingStyle =
+                    styles[(styles.indexOf(_floatingStyle) + 1) %
+                        styles.length];
               }),
             ),
             child: child ?? const SizedBox.shrink(),
@@ -133,7 +143,7 @@ class CatalogHome extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(t('app_title')),
-        actions: const [SizedBox(width: 104)],
+        actions: const [SizedBox(width: 148)],
       ),
       // No SafaehPageIndex / overlay on home — those live only in the
       // page-index demo widgets (own scroll + keys).

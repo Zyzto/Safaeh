@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'floating_surface.dart';
+import 'floating_surface_renderer.dart';
 import 'theme.dart';
 
 /// One jump target in a long scrolling page.
@@ -86,12 +88,14 @@ class SafaehPageIndexOverlay extends StatefulWidget {
     required this.entries,
     required this.activeId,
     required this.onSelect,
+    this.floatingAppearance,
   });
 
   final String title;
   final List<SafaehPageIndexEntry> entries;
   final String? activeId;
   final ValueChanged<SafaehPageIndexEntry> onSelect;
+  final SafaehFloatingAppearance? floatingAppearance;
 
   @override
   State<SafaehPageIndexOverlay> createState() => _SafaehPageIndexOverlayState();
@@ -152,6 +156,8 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final appearance =
+        widget.floatingAppearance ?? SafaehTheme.of(context).floatingAppearance;
     final showPanel = _open || _anim.status == AnimationStatus.reverse;
     SafaehPageIndexEntry? active;
     for (final entry in widget.entries) {
@@ -193,6 +199,7 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
                               title: widget.title,
                               entries: widget.entries,
                               activeId: widget.activeId,
+                              floatingAppearance: appearance,
                               onSelect: (entry) {
                                 _setOpen(false);
                                 widget.onSelect(entry);
@@ -203,80 +210,14 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
                       ),
                       const SizedBox(height: 8),
                     ],
-                    Material(
-                      elevation: showPanel ? 6 : 4,
-                      shadowColor: cs.shadow.withValues(alpha: 0.28),
-                      color: cs.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(28),
-                      child: Semantics(
-                        button: true,
-                        expanded: showPanel,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(28),
-                          onTap: () => _setOpen(!showPanel),
-                          child: Container(
-                          constraints: const BoxConstraints(maxWidth: 220),
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                            12,
-                            10,
-                            14,
-                            10,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(
-                              color: cs.outline,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: cs.primaryContainer,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  showPanel
-                                      ? Icons.close_rounded
-                                      : Icons.list_alt_rounded,
-                                  size: 18,
-                                  color: cs.onPrimaryContainer,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Flexible(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.title,
-                                      style: theme.textTheme.labelMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                    ),
-                                    _entryLabel(
-                                      entry: active,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: cs.onSurface,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                      maxLines: 1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ),
-                      ),
+                    _PageIndexTrigger(
+                      title: widget.title,
+                      active: active,
+                      showPanel: showPanel,
+                      theme: theme,
+                      colorScheme: cs,
+                      appearance: appearance,
+                      onTap: () => _setOpen(!showPanel),
                     ),
                   ],
                 ),
@@ -289,18 +230,130 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
   }
 }
 
+class _PageIndexTrigger extends StatelessWidget {
+  const _PageIndexTrigger({
+    required this.title,
+    required this.active,
+    required this.showPanel,
+    required this.theme,
+    required this.colorScheme,
+    required this.appearance,
+    required this.onTap,
+  });
+
+  final String title;
+  final SafaehPageIndexEntry active;
+  final bool showPanel;
+  final ThemeData theme;
+  final ColorScheme colorScheme;
+  final SafaehFloatingAppearance? appearance;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(28);
+    final content = Semantics(
+      button: true,
+      expanded: showPanel,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 220),
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 14, 10),
+          decoration: appearance == null
+              ? BoxDecoration(
+                  borderRadius: radius,
+                  border: Border.all(color: colorScheme.outline),
+                )
+              : null,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  showPanel ? Icons.close_rounded : Icons.list_alt_rounded,
+                  size: 18,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    _entryLabel(
+                      entry: active,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (appearance == null) {
+      return Material(
+        elevation: showPanel ? 6 : 4,
+        shadowColor: colorScheme.shadow.withValues(alpha: 0.28),
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: radius,
+        child: content,
+      );
+    }
+
+    return SafaehFloatingSurface(
+      appearance: appearance,
+      fallbackColor: colorScheme.surfaceContainerHigh,
+      fallbackBorder: Border.all(color: colorScheme.outline),
+      fallbackShadows: [
+        BoxShadow(
+          color: colorScheme.shadow.withValues(alpha: 0.28),
+          blurRadius: showPanel ? 16 : 12,
+          offset: Offset(0, showPanel ? 6 : 4),
+        ),
+      ],
+      borderRadius: radius,
+      child: content,
+    );
+  }
+}
+
 class _PopoverPanel extends StatelessWidget {
   const _PopoverPanel({
     required this.title,
     required this.entries,
     required this.activeId,
     required this.onSelect,
+    required this.floatingAppearance,
   });
 
   final String title;
   final List<SafaehPageIndexEntry> entries;
   final String? activeId;
   final ValueChanged<SafaehPageIndexEntry> onSelect;
+  final SafaehFloatingAppearance? floatingAppearance;
 
   @override
   Widget build(BuildContext context) {
@@ -308,49 +361,73 @@ class _PopoverPanel extends StatelessWidget {
     final cs = theme.colorScheme;
     final maxH = MediaQuery.sizeOf(context).height * 0.45;
 
-    return Material(
-      elevation: 8,
-      shadowColor: cs.shadow.withValues(alpha: 0.3),
-      color: cs.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(16),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 260, maxHeight: maxH),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outline),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-                    child: Text(
-                      title,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  for (final entry in entries)
-                    _IndexLink(
-                      entry: entry,
-                      selected: entry.id == activeId,
-                      onTap: () => onSelect(entry),
-                      dense: true,
-                    ),
-                ],
+    final radius = BorderRadius.circular(16);
+    final panelScroll = ClipRRect(
+      borderRadius: radius,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+              child: Text(
+                title,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
+            for (final entry in entries)
+              _IndexLink(
+                entry: entry,
+                selected: entry.id == activeId,
+                onTap: () => onSelect(entry),
+                dense: true,
+              ),
+          ],
         ),
       ),
+    );
+    final panelContent = ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: 260, maxHeight: maxH),
+      child: panelScroll,
+    );
+
+    if (floatingAppearance == null) {
+      return Material(
+        elevation: 8,
+        shadowColor: cs.shadow.withValues(alpha: 0.3),
+        color: cs.surfaceContainerHigh,
+        borderRadius: radius,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 260, maxHeight: maxH),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(color: cs.outline),
+            ),
+            child: panelScroll,
+          ),
+        ),
+      );
+    }
+
+    return SafaehFloatingSurface(
+      appearance: floatingAppearance,
+      fallbackColor: cs.surfaceContainerHigh,
+      fallbackBorder: Border.all(color: cs.outline),
+      fallbackShadows: [
+        BoxShadow(
+          color: cs.shadow.withValues(alpha: 0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 4),
+        ),
+      ],
+      borderRadius: radius,
+      child: panelContent,
     );
   }
 }
@@ -413,7 +490,9 @@ class _IndexLink extends StatelessWidget {
                       entry: entry,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: selected ? cs.primary : cs.onSurface,
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         height: 1.25,
                       ),
                     ),

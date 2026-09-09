@@ -548,6 +548,10 @@ void main() {
                     selectedIcon: Icons.settings,
                   ),
                 ],
+                profile: SafaehSidenavProfile(
+                  label: 'Ada Lovelace',
+                  onTap: _noop,
+                ),
                 footer: const Text('v0.1.0'),
               ),
             );
@@ -560,6 +564,17 @@ void main() {
     expect(find.byKey(const ValueKey('safaeh_nav_rail')), findsNothing);
     expect(find.text('Groups'), findsOneWidget);
     expect(find.text('v0.1.0'), findsOneWidget);
+    final groupX = tester.getCenter(find.byIcon(Icons.group)).dx;
+    final avatarX = tester
+        .getCenter(find.byKey(const ValueKey('safaeh_nav_profile_avatar')))
+        .dx;
+    expect(groupX, closeTo(avatarX, 0.01));
+    final titleLeft = tester.getRect(find.text('Safaeh')).left;
+    expect(
+      tester.getRect(find.text('Groups')).left,
+      closeTo(titleLeft - 4, 0.01),
+    );
+    expect(tester.getRect(find.text('v0.1.0')).left, closeTo(titleLeft, 0.01));
 
     await tester.tap(find.text('Settings'));
     await tester.pump();
@@ -1465,3 +1480,5 @@ void main() {
     );
   });
 }
+
+void _noop() {}

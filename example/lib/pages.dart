@@ -422,11 +422,7 @@ class DialogDemo extends StatelessWidget {
 }
 
 class _DemoPage extends StatelessWidget {
-  const _DemoPage({
-    required this.title,
-    required this.body,
-    this.pad = true,
-  });
+  const _DemoPage({required this.title, required this.body, this.pad = true});
 
   final String title;
   final String body;
@@ -446,7 +442,10 @@ class _DemoPage extends StatelessWidget {
     return ColoredBox(
       color: theme.colorScheme.surface,
       child: pad
-          ? ListView(padding: const EdgeInsets.fromLTRB(20, 24, 20, 24), children: [content])
+          ? ListView(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              children: [content],
+            )
           : content,
     );
   }
@@ -615,6 +614,109 @@ class _SidenavDrawerDemoState extends State<SidenavDrawerDemo> {
   }
 }
 
+class SidenavOverlayDemo extends StatefulWidget {
+  const SidenavOverlayDemo({super.key, required this.t});
+
+  final String Function(String key) t;
+
+  @override
+  State<SidenavOverlayDemo> createState() => _SidenavOverlayDemoState();
+}
+
+class _SidenavOverlayDemoState extends State<SidenavOverlayDemo> {
+  var _collapsed = true;
+  var _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.t;
+    final cs = Theme.of(context).colorScheme;
+    final dir = Directionality.of(context);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _FloatingSurfaceBackdrop(
+          background: cs.primaryContainer,
+          foreground: cs.onPrimaryContainer,
+          accent: cs.primary,
+          index: 7,
+        ),
+        Positioned.directional(
+          textDirection: dir,
+          start: 92,
+          end: 20,
+          top: 28,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t('groups'),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: cs.onPrimaryContainer,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                t('nav_page_copy'),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: cs.onPrimaryContainer),
+              ),
+              const SizedBox(height: 24),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: cs.onPrimaryContainer.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    t('toggle_rail'),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cs.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SafaehSidenav(
+          overlay: true,
+          collapsed: _collapsed,
+          onToggleCompact: () => setState(() => _collapsed = !_collapsed),
+          title: t('app_title'),
+          selectedIndex: _index,
+          onDestinationSelected: (i) => setState(() => _index = i),
+          expandTooltip: t('expand'),
+          collapseTooltip: t('collapse'),
+          railKey: const ValueKey('safaeh_nav_overlay'),
+          destinations: [
+            SafaehSidenavDestination(
+              label: t('groups'),
+              icon: Icons.group_outlined,
+              selectedIcon: Icons.group,
+            ),
+            SafaehSidenavDestination(
+              label: t('settings'),
+              icon: Icons.settings_outlined,
+              selectedIcon: Icons.settings,
+            ),
+          ],
+          profile: SafaehSidenavProfile(
+            label: t('profile_name'),
+            subtitle: t('profile_email'),
+            labelBuilder: catalogIsolateLabel,
+            trailing: Icon(safaehChevronEnd(context), size: 22),
+            onTap: () {},
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class FloatingNavDemo extends StatefulWidget {
   const FloatingNavDemo({super.key, required this.t});
 
@@ -649,7 +751,8 @@ class _FloatingNavDemoState extends State<FloatingNavDemo> {
     );
     return LayoutBuilder(
       builder: (context, constraints) {
-        final tall = constraints.maxHeight.isFinite && constraints.maxHeight > 160;
+        final tall =
+            constraints.maxHeight.isFinite && constraints.maxHeight > 160;
         final tokens = SafaehTheme.of(context);
         final wide = tokens.isWide(context);
         final metrics = safaehBandMetrics(
@@ -688,6 +791,252 @@ class _FloatingNavDemoState extends State<FloatingNavDemo> {
       },
     );
   }
+}
+
+/// Focused appearance fixture: each preset sits over a different backdrop so
+/// transparency and blur can be compared without a host camera or plugin.
+/// The first sample, when present, inherits the style selected by the catalog
+/// appearance toggle. The remaining samples pin each preset for comparison.
+class FloatingSurfaceStylesDemo extends StatelessWidget {
+  const FloatingSurfaceStylesDemo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeStyle = SafaehTheme.of(context).floatingAppearance?.style;
+    final styles = SafaehFloatingSurfaceStyle.values;
+    return SingleChildScrollView(
+      key: const ValueKey('floating_surface_demo'),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (themeStyle != null) ...[
+            _FloatingSurfaceSample(
+              key: const ValueKey('floating_style_theme'),
+              sampleIndex: 0,
+              style: themeStyle,
+              label: 'Theme selection — ${_floatingStyleName(themeStyle)}',
+              navKey: const ValueKey('floating_style_nav_theme'),
+            ),
+            const SizedBox(height: 12),
+          ],
+          for (var index = 0; index < styles.length; index++) ...[
+            _FloatingSurfaceSample(
+              key: ValueKey('floating_style_${styles[index].name}'),
+              sampleIndex: index + (themeStyle == null ? 0 : 1),
+              style: styles[index],
+              appearance: SafaehFloatingAppearance(style: styles[index]),
+              label: _floatingStyleName(styles[index]),
+              navKey: ValueKey('floating_style_nav_${styles[index].name}'),
+            ),
+            if (index < styles.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FloatingSurfaceSample extends StatelessWidget {
+  const _FloatingSurfaceSample({
+    super.key,
+    required this.sampleIndex,
+    required this.style,
+    required this.label,
+    required this.navKey,
+    this.appearance,
+  });
+
+  final int sampleIndex;
+  final SafaehFloatingSurfaceStyle style;
+  final String label;
+  final Key navKey;
+  final SafaehFloatingAppearance? appearance;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final backdrop = sampleIndex.isEven
+        ? cs.primaryContainer
+        : cs.tertiaryContainer;
+    final foreground = sampleIndex.isEven
+        ? cs.onPrimaryContainer
+        : cs.onTertiaryContainer;
+    final accent = sampleIndex.isEven ? cs.primary : cs.tertiary;
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: cs.outline),
+      ),
+      child: SizedBox(
+        height: 176,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _FloatingSurfaceBackdrop(
+              key: ValueKey('floating_style_backdrop_$sampleIndex'),
+              background: backdrop,
+              foreground: foreground,
+              accent: accent,
+              index: sampleIndex,
+            ),
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.touch_app_outlined, color: foreground, size: 18),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 12,
+              child: ExcludeFocusTraversal(
+                key: ValueKey('floating_style_focus_guard_$sampleIndex'),
+                child: SafaehFloatingNavBar(
+                  key: navKey,
+                  selectedIndex: sampleIndex % 3,
+                  onDestinationSelected: (_) {},
+                  margin: EdgeInsets.zero,
+                  activeColor: accent,
+                  inactiveColor: foreground.withValues(alpha: 0.82),
+                  backgroundColor: cs.surfaceContainerHighest,
+                  floatingAppearance: appearance,
+                  destinations: [
+                    SafaehSidenavDestination(
+                      label: 'Preview',
+                      icon: Icons.visibility_outlined,
+                      selectedIcon: Icons.visibility,
+                      tileKey: ValueKey(
+                        'floating_surface_preview_$sampleIndex',
+                      ),
+                    ),
+                    SafaehSidenavDestination(
+                      label: 'Details',
+                      icon: Icons.tune_outlined,
+                      selectedIcon: Icons.tune,
+                      tileKey: ValueKey(
+                        'floating_surface_details_$sampleIndex',
+                      ),
+                    ),
+                    SafaehSidenavDestination(
+                      label: 'More',
+                      icon: Icons.more_horiz,
+                      selectedIcon: Icons.more_horiz,
+                      tileKey: ValueKey('floating_surface_more_$sampleIndex'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FloatingSurfaceBackdrop extends StatelessWidget {
+  const _FloatingSurfaceBackdrop({
+    super.key,
+    required this.background,
+    required this.foreground,
+    required this.accent,
+    required this.index,
+  });
+
+  final Color background;
+  final Color foreground;
+  final Color accent;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            background,
+            Color.lerp(background, accent, 0.42)!,
+            Color.lerp(background, accent, 0.78)!,
+          ],
+        ),
+      ),
+      child: CustomPaint(
+        painter: _FloatingSurfacePatternPainter(
+          foreground: foreground,
+          accent: accent,
+          index: index,
+        ),
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class _FloatingSurfacePatternPainter extends CustomPainter {
+  const _FloatingSurfacePatternPainter({
+    required this.foreground,
+    required this.accent,
+    required this.index,
+  });
+
+  final Color foreground;
+  final Color accent;
+  final int index;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final lines = Paint()
+      ..color = foreground.withValues(alpha: 0.2)
+      ..strokeWidth = 1;
+    final spacing = 24.0 + index * 2;
+    for (var x = -size.height; x < size.width; x += spacing) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height, size.height),
+        lines,
+      );
+    }
+
+    final dots = Paint()..color = foreground.withValues(alpha: 0.22);
+    for (var row = 0; row < 5; row++) {
+      for (var column = 0; column < 12; column++) {
+        final x = 18.0 + column * 34 + (row.isEven ? 0 : 17);
+        final y = 34.0 + row * 28;
+        canvas.drawCircle(Offset(x, y), 2.5 + (column % 3), dots);
+      }
+    }
+
+    final shapes = Paint()..color = accent.withValues(alpha: 0.42);
+    final offset = (index % 3) * 36.0;
+    canvas.drawCircle(Offset(size.width - 28, 28 + offset), 46, shapes);
+    canvas.drawCircle(Offset(46 + offset, size.height - 30), 34, shapes);
+  }
+
+  @override
+  bool shouldRepaint(_FloatingSurfacePatternPainter oldDelegate) => false;
+}
+
+String _floatingStyleName(SafaehFloatingSurfaceStyle style) {
+  final name = style.name;
+  return '${name[0].toUpperCase()}${name.substring(1)}';
 }
 
 class PageIndexRailDemo extends StatefulWidget {
@@ -877,10 +1226,7 @@ class ContentBandDemo extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              t('band_copy'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            Text(t('band_copy'), style: Theme.of(context).textTheme.bodyLarge),
           ],
         ),
       ),
@@ -914,10 +1260,7 @@ class EndAsideDemo extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  t('aside'),
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text(t('aside'), style: Theme.of(context).textTheme.titleSmall),
               ],
             ),
           );
@@ -1035,9 +1378,7 @@ class MockCameraChild extends StatelessWidget {
                 tooltip: sheet.expanded ? t('collapse') : t('expand'),
                 onPressed: sheet.toggleExpanded,
                 icon: Icon(
-                  sheet.expanded
-                      ? Icons.close_fullscreen
-                      : Icons.open_in_full,
+                  sheet.expanded ? Icons.close_fullscreen : Icons.open_in_full,
                   color: Colors.white,
                 ),
               ),
@@ -1168,7 +1509,7 @@ class CatalogDemoPage extends StatelessWidget {
                 icon: Icon(safaehArrowBack(context)),
               )
             : null,
-        actions: const [SizedBox(width: 104)],
+        actions: const [SizedBox(width: 148)],
       ),
       body: padBody
           ? Padding(
@@ -1194,8 +1535,12 @@ Widget _catalogPageBody(String id, String Function(String key) t) {
       return SidenavRailDemo(t: t);
     case 'sidenav_drawer':
       return SidenavDrawerDemo(t: t);
+    case 'sidenav_overlay':
+      return SidenavOverlayDemo(t: t);
     case 'floating_nav':
       return FloatingNavDemo(t: t);
+    case 'floating_surface':
+      return const FloatingSurfaceStylesDemo();
     case 'page_index':
       return PageIndexRailDemo(t: t);
     case 'page_index_overlay':
@@ -1217,11 +1562,8 @@ Future<void> _pushDemo(
 }) {
   return Navigator.of(context).push<void>(
     MaterialPageRoute<void>(
-      builder: (_) => CatalogDemoPage(
-        title: title,
-        padBody: padBody,
-        child: child,
-      ),
+      builder: (_) =>
+          CatalogDemoPage(title: title, padBody: padBody, child: child),
     ),
   );
 }
@@ -1397,10 +1739,11 @@ Future<void> openCatalogItem(
         padBody: switch (id) {
           'sidenav' ||
           'sidenav_drawer' ||
+          'sidenav_overlay' ||
           'page_index' ||
           'page_index_overlay' ||
-          'floating_nav' =>
-            false,
+          'floating_nav' ||
+          'floating_surface' => false,
           _ => true,
         },
       );
@@ -1409,10 +1752,7 @@ Future<void> openCatalogItem(
 
 /// Dimmed host page + bottom-docked sheet (compact or center-to-center).
 class CatalogPhoneModalStage extends StatelessWidget {
-  const CatalogPhoneModalStage({
-    super.key,
-    required this.child,
-  });
+  const CatalogPhoneModalStage({super.key, required this.child});
 
   final Widget child;
 
@@ -1471,9 +1811,7 @@ class PhoneSheetFrame extends StatelessWidget {
               side: BorderSide(color: cs.outline),
             ),
             child: Column(
-              mainAxisSize: fillHeight
-                  ? MainAxisSize.max
-                  : MainAxisSize.min,
+              mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(

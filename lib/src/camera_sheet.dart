@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'floating_surface.dart';
+import 'floating_surface_renderer.dart';
 import 'sheet_handle_drag.dart';
 import 'theme.dart';
 
@@ -52,8 +54,11 @@ Future<T?> showSafaehCameraSheet<T>({
   String? handleExpandLabel,
   String? handleCollapseLabel,
   String? handleDismissLabel,
+  SafaehFloatingAppearance? floatingAppearance,
 }) {
   final tokens = SafaehTheme.of(context);
+  final resolvedFloatingAppearance =
+      floatingAppearance ?? tokens.floatingAppearance;
   return showGeneralDialog<T>(
     context: context,
     useRootNavigator: useRootNavigator,
@@ -75,6 +80,7 @@ Future<T?> showSafaehCameraSheet<T>({
         handleExpandLabel: handleExpandLabel,
         handleCollapseLabel: handleCollapseLabel,
         handleDismissLabel: handleDismissLabel,
+        floatingAppearance: resolvedFloatingAppearance,
         builder: builder,
       );
     },
@@ -102,6 +108,7 @@ class SafaehCameraSheetHost extends StatefulWidget {
     this.handleExpandLabel,
     this.handleCollapseLabel,
     this.handleDismissLabel,
+    this.floatingAppearance,
   });
 
   final SafaehCameraSheetBuilder builder;
@@ -131,8 +138,43 @@ class SafaehCameraSheetHost extends StatefulWidget {
   /// Override for the Material dismiss fallback.
   final String? handleDismissLabel;
 
+  /// Appearance for the camera panel shell and inherited QR top bar.
+  final SafaehFloatingAppearance? floatingAppearance;
+
   @override
   State<SafaehCameraSheetHost> createState() => _SafaehCameraSheetHostState();
+}
+
+class _CameraPanelSurface extends StatelessWidget {
+  const _CameraPanelSurface({
+    required this.appearance,
+    required this.panelColor,
+    required this.radius,
+    required this.child,
+  });
+
+  final SafaehFloatingAppearance? appearance;
+  final Color panelColor;
+  final BorderRadius radius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (appearance == null) {
+      return Material(
+        color: panelColor,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      );
+    }
+    return SafaehFloatingSurface(
+      appearance: appearance,
+      fallbackColor: panelColor,
+      borderRadius: radius,
+      child: child,
+    );
+  }
 }
 
 class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
@@ -234,9 +276,13 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = SafaehTheme.of(context).copyWith(
+    final inheritedTokens = SafaehTheme.of(context);
+    final appearance =
+        widget.floatingAppearance ?? inheritedTokens.floatingAppearance;
+    final tokens = inheritedTokens.copyWith(
       enterCurve: widget.enterCurve,
       exitCurve: widget.exitCurve,
+      floatingAppearance: appearance,
     );
     final size = MediaQuery.sizeOf(context);
     final isWide = tokens.isWide(context);
@@ -267,109 +313,115 @@ class _SafaehCameraSheetHostState extends State<SafaehCameraSheetHost> {
     Widget host = SafaehTheme(
       data: tokens,
       child: SafaehNavigatorScope(
-      useRootNavigator: widget.useRootNavigator,
-      child: Material(
-      type: MaterialType.transparency,
-      child: SizedBox.expand(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(child: scrimLayer),
-            AnimatedPadding(
-              duration: duration,
-              curve: tokens.enterCurve,
-              padding: isWide && !_expanded
-                  ? EdgeInsetsDirectional.only(start: 16 + railWidth, end: 16)
-                  : (isWide
-                        ? EdgeInsetsDirectional.only(start: railWidth)
-                        : EdgeInsets.zero),
-              child: AnimatedBuilder(
-                animation: _roll,
-                builder: (context, child) {
-                  final panelH = _drag.panelHeight(
-                    expanded: _expanded,
-                    compactH: compactH,
-                    fullH: fullH,
-                  );
-                  final radius = _expanded && _drag.offset <= 0
-                      ? BorderRadius.zero
+        useRootNavigator: widget.useRootNavigator,
+        child: Material(
+          type: MaterialType.transparency,
+          child: SizedBox.expand(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned.fill(child: scrimLayer),
+                AnimatedPadding(
+                  duration: duration,
+                  curve: tokens.enterCurve,
+                  padding: isWide && !_expanded
+                      ? EdgeInsetsDirectional.only(
+                          start: 16 + railWidth,
+                          end: 16,
+                        )
                       : (isWide
-                            ? BorderRadius.circular(tokens.radius)
-                            : BorderRadius.vertical(
-                                top: Radius.circular(tokens.radius),
-                              ));
-                  final rolling =
-                      animation != null &&
-                      (animation.status == AnimationStatus.forward ||
-                          animation.status == AnimationStatus.reverse);
-                  final progress = _rollProgress(tokens);
-                  return Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Transform.translate(
-                      offset: Offset(
-                        0,
-                        _drag.translateY(expanded: _expanded),
-                      ),
-                      child: Opacity(
-                        opacity: progress,
-                        child: FractionalTranslation(
-                          translation: Offset(0, 1 - progress),
-                          child: AnimatedContainer(
-                            duration: rolling || _drag.offset != 0
-                                ? Duration.zero
-                                : duration,
-                            curve: tokens.enterCurve,
-                            width: panelWidth,
-                            height: panelH,
-                            child: SizedBox(
-                              key: const ValueKey('safaeh_camera_panel'),
-                              width: panelWidth,
-                              height: panelH,
-                              child: Material(
-                                color: widget.panelColor,
-                                borderRadius: radius,
-                                clipBehavior: Clip.antiAlias,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    SheetHandleBar(
-                                      expanded: _expanded,
-                                      duration: duration,
-                                      curve: tokens.enterCurve,
-                                      expandLabel: widget.handleExpandLabel,
-                                      collapseLabel:
-                                          widget.handleCollapseLabel,
-                                      dismissLabel: widget.handleDismissLabel,
-                                      onTap: widget.barrierDismissible
-                                          ? () => unawaited(_dismiss())
-                                          : null,
-                                      onVerticalDragUpdate: _onDragUpdate,
-                                      onVerticalDragEnd: _onHandleDragEnd,
-                                      onVerticalDragCancel: () {
-                                        _drag.reset();
-                                        _dragTick.value++;
-                                      },
+                            ? EdgeInsetsDirectional.only(start: railWidth)
+                            : EdgeInsets.zero),
+                  child: AnimatedBuilder(
+                    animation: _roll,
+                    builder: (context, child) {
+                      final panelH = _drag.panelHeight(
+                        expanded: _expanded,
+                        compactH: compactH,
+                        fullH: fullH,
+                      );
+                      final radius = _expanded && _drag.offset <= 0
+                          ? BorderRadius.zero
+                          : (isWide
+                                ? BorderRadius.circular(tokens.radius)
+                                : BorderRadius.vertical(
+                                    top: Radius.circular(tokens.radius),
+                                  ));
+                      final rolling =
+                          animation != null &&
+                          (animation.status == AnimationStatus.forward ||
+                              animation.status == AnimationStatus.reverse);
+                      final progress = _rollProgress(tokens);
+                      return Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Transform.translate(
+                          offset: Offset(
+                            0,
+                            _drag.translateY(expanded: _expanded),
+                          ),
+                          child: Opacity(
+                            opacity: progress,
+                            child: FractionalTranslation(
+                              translation: Offset(0, 1 - progress),
+                              child: AnimatedContainer(
+                                duration: rolling || _drag.offset != 0
+                                    ? Duration.zero
+                                    : duration,
+                                curve: tokens.enterCurve,
+                                width: panelWidth,
+                                height: panelH,
+                                child: SizedBox(
+                                  key: const ValueKey('safaeh_camera_panel'),
+                                  width: panelWidth,
+                                  height: panelH,
+                                  child: _CameraPanelSurface(
+                                    appearance: appearance,
+                                    panelColor: widget.panelColor,
+                                    radius: radius,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        SheetHandleBar(
+                                          expanded: _expanded,
+                                          duration: duration,
+                                          curve: tokens.enterCurve,
+                                          expandLabel: widget.handleExpandLabel,
+                                          collapseLabel:
+                                              widget.handleCollapseLabel,
+                                          dismissLabel:
+                                              widget.handleDismissLabel,
+                                          onTap: widget.barrierDismissible
+                                              ? () => unawaited(_dismiss())
+                                              : null,
+                                          onVerticalDragUpdate: _onDragUpdate,
+                                          onVerticalDragEnd: _onHandleDragEnd,
+                                          onVerticalDragCancel: () {
+                                            _drag.reset();
+                                            _dragTick.value++;
+                                          },
+                                        ),
+                                        Expanded(child: child!),
+                                      ],
                                     ),
-                                    Expanded(child: child!),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
+                      );
+                    },
+                    child: RepaintBoundary(
+                      child: widget.builder(context, _sheet),
                     ),
-                  );
-                },
-                child: RepaintBoundary(child: widget.builder(context, _sheet)),
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    ),
-    ),
     );
     // Only the dialog route: an embedded host must not steal the page back.
     if (widget.openAnimation == null) return host;

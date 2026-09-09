@@ -9,6 +9,7 @@ export 'src/content_aside.dart';
 export 'src/content_band.dart';
 export 'src/dialog.dart';
 export 'src/floating_nav.dart';
+export 'src/floating_surface.dart';
 export 'src/option_picker.dart';
 export 'src/option_tile.dart';
 export 'src/page_index.dart';

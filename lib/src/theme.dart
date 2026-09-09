@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'floating_surface.dart';
+
 /// Compact fraction of screen height for camera / QR sheets (60–70% band).
 const double kSafaehCameraCompactHeightFraction = 0.65;
 
@@ -20,6 +22,7 @@ class SafaehThemeData {
     this.exitCurve = Curves.easeInCubic,
     this.cameraCompactHeightFraction = kSafaehCameraCompactHeightFraction,
     this.contentMaxWidth = 600,
+    this.floatingAppearance,
   });
 
   static const fallback = SafaehThemeData();
@@ -42,6 +45,11 @@ class SafaehThemeData {
   /// rail (Hisab) keep their own band metrics and only use this as a token.
   final double contentMaxWidth;
 
+  /// Default appearance for package-owned floating and overlay surfaces.
+  ///
+  /// When null, each surface keeps its existing rendering defaults.
+  final SafaehFloatingAppearance? floatingAppearance;
+
   /// Copies this theme, replacing any non-null arguments.
   SafaehThemeData copyWith({
     double? tabletBreakpoint,
@@ -58,6 +66,7 @@ class SafaehThemeData {
     Curve? exitCurve,
     double? cameraCompactHeightFraction,
     double? contentMaxWidth,
+    SafaehFloatingAppearance? floatingAppearance,
   }) {
     return SafaehThemeData(
       tabletBreakpoint: tabletBreakpoint ?? this.tabletBreakpoint,
@@ -75,6 +84,7 @@ class SafaehThemeData {
       cameraCompactHeightFraction:
           cameraCompactHeightFraction ?? this.cameraCompactHeightFraction,
       contentMaxWidth: contentMaxWidth ?? this.contentMaxWidth,
+      floatingAppearance: floatingAppearance ?? this.floatingAppearance,
     );
   }
 
@@ -98,7 +108,8 @@ class SafaehThemeData {
             sheetRollEnter == other.sheetRollEnter &&
             exitCurve == other.exitCurve &&
             cameraCompactHeightFraction == other.cameraCompactHeightFraction &&
-            contentMaxWidth == other.contentMaxWidth;
+            contentMaxWidth == other.contentMaxWidth &&
+            floatingAppearance == other.floatingAppearance;
   }
 
   @override
@@ -117,6 +128,7 @@ class SafaehThemeData {
     exitCurve,
     cameraCompactHeightFraction,
     contentMaxWidth,
+    floatingAppearance,
   );
 }
 
