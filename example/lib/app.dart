@@ -104,25 +104,31 @@ class _SafaehExampleAppState extends State<SafaehExampleApp> {
         darkTheme: catalogTheme(Brightness.dark),
         themeMode: _themeMode,
         builder: (context, child) {
-          return ThemeRippleHost(
-            overlay: CatalogAppearanceToggles(
-              localeCode: _locale,
-              themeMode: _themeMode,
-              floatingStyle: _floatingStyle,
-              onSelectLocale: (code) => setState(() => _locale = code),
-              onToggleTheme: () => setState(() {
-                _themeMode = _themeMode == ThemeMode.dark
-                    ? ThemeMode.light
-                    : ThemeMode.dark;
-              }),
-              onCycleFloatingStyle: () => setState(() {
-                final styles = SafaehFloatingSurfaceStyle.values;
-                _floatingStyle =
-                    styles[(styles.indexOf(_floatingStyle) + 1) %
-                        styles.length];
-              }),
+          return SafaehFeedbackHost(
+            itemWidthBuilder: (context) =>
+                (MediaQuery.sizeOf(context).width - 32)
+                    .clamp(0.0, 560.0)
+                    .toDouble(),
+            child: ThemeRippleHost(
+              overlay: CatalogAppearanceToggles(
+                localeCode: _locale,
+                themeMode: _themeMode,
+                floatingStyle: _floatingStyle,
+                onSelectLocale: (code) => setState(() => _locale = code),
+                onToggleTheme: () => setState(() {
+                  _themeMode = _themeMode == ThemeMode.dark
+                      ? ThemeMode.light
+                      : ThemeMode.dark;
+                }),
+                onCycleFloatingStyle: () => setState(() {
+                  final styles = SafaehFloatingSurfaceStyle.values;
+                  _floatingStyle =
+                      styles[(styles.indexOf(_floatingStyle) + 1) %
+                          styles.length];
+                }),
+              ),
+              child: child ?? const SizedBox.shrink(),
             ),
-            child: child ?? const SizedBox.shrink(),
           );
         },
         home: CatalogHome(localeCode: _locale),

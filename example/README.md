@@ -71,4 +71,6 @@ flutter run
 14. **Content band / end aside / aligned chrome** — `safaehBandMetrics`
 15. **Camera host / QR overlay / QR message** — QR chrome sits in the
     camera bottom panel (`SafaehCameraSheetHost`)
-16. **Language + theme toggles**
+16. **Feedback** — shared host, typed surfaces, action messages, and custom
+    feedback builders
+17. **Language + theme toggles**

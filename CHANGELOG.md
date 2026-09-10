@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Tags are `vX.Y.Z` and must match `version:` in [`pubspec.yaml`](pubspec.yaml).
 See [VERSIONING.md](VERSIONING.md).
 
-## [Unreleased]
+## [0.2.5] - 2026-09-10
+
+### Docs
+- Added an interactive feedback example to the multilingual catalog, including
+  typed messages, action feedback, custom content, and dismissal.
 
 ## [0.2.4] - 2026-09-10
 

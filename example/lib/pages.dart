@@ -163,6 +163,127 @@ class StatusBodyDemo extends StatelessWidget {
   }
 }
 
+class FeedbackDemo extends StatefulWidget {
+  const FeedbackDemo({super.key, required this.t});
+
+  final String Function(String key) t;
+
+  @override
+  State<FeedbackDemo> createState() => _FeedbackDemoState();
+}
+
+class _FeedbackDemoState extends State<FeedbackDemo> {
+  String? _actionStatus;
+
+  String t(String key) => widget.t(key);
+
+  void _showActionFeedback() {
+    context.showSafaehFeedbackWithAction(
+      t('feedback_action_message'),
+      actionLabel: t('feedback_undo'),
+      onAction: () => setState(() => _actionStatus = t('feedback_undone')),
+      icon: Icons.undo_outlined,
+    );
+  }
+
+  void _showCustomFeedback() {
+    context.showSafaehCustomFeedback(
+      builder: (context, dismiss) => SafaehFeedbackSurface(
+        type: SafaehFeedbackType.info,
+        icon: Icons.auto_awesome_outlined,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(t('feedback_custom_message')),
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton(onPressed: dismiss, child: Text(t('close'))),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          t('feedback_description'),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              key: const ValueKey('feedback_info_button'),
+              onPressed: () =>
+                  context.showSafaehFeedback(t('feedback_info_message')),
+              icon: const Icon(Icons.info_outline),
+              label: Text(t('feedback_info')),
+            ),
+            FilledButton.icon(
+              key: const ValueKey('feedback_success_button'),
+              onPressed: () => context.showSafaehFeedback(
+                t('feedback_success_message'),
+                type: SafaehFeedbackType.success,
+              ),
+              icon: const Icon(Icons.check_circle_outline),
+              label: Text(t('feedback_success')),
+            ),
+            FilledButton.tonalIcon(
+              key: const ValueKey('feedback_error_button'),
+              onPressed: () => context.showSafaehFeedback(
+                t('feedback_error_message'),
+                type: SafaehFeedbackType.error,
+              ),
+              icon: const Icon(Icons.error_outline),
+              label: Text(t('feedback_error')),
+            ),
+            OutlinedButton.icon(
+              key: const ValueKey('feedback_action_button'),
+              onPressed: _showActionFeedback,
+              icon: const Icon(Icons.undo_outlined),
+              label: Text(t('feedback_action')),
+            ),
+            OutlinedButton.icon(
+              key: const ValueKey('feedback_custom_button'),
+              onPressed: _showCustomFeedback,
+              icon: const Icon(Icons.auto_awesome_outlined),
+              label: Text(t('feedback_custom')),
+            ),
+            TextButton(
+              key: const ValueKey('feedback_dismiss_button'),
+              onPressed: context.dismissSafaehFeedbacks,
+              child: Text(t('feedback_dismiss_all')),
+            ),
+          ],
+        ),
+        if (_actionStatus != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            _actionStatus!,
+            key: const ValueKey('feedback_action_status'),
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class ConfirmDemo extends StatelessWidget {
   const ConfirmDemo({super.key, required this.t});
 
@@ -1531,6 +1652,8 @@ Widget _catalogPageBody(String id, String Function(String key) t) {
       return OptionTilesDemo(t: t);
     case 'status_body':
       return StatusBodyDemo(t: t);
+    case 'feedback':
+      return FeedbackDemo(t: t);
     case 'sidenav':
       return SidenavRailDemo(t: t);
     case 'sidenav_drawer':

@@ -49,3 +49,6 @@ Thumbs.db
 
 # FVM Version Cache
 .fvm/
+
+# Local semantic search index
+.zvec-grep/

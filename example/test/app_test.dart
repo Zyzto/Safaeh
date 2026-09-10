@@ -240,6 +240,45 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
+  testWidgets('feedback demo uses the shared host and action contract', (
+    tester,
+  ) async {
+    await pumpExampleApp(tester);
+
+    await _reveal(tester, 'feedback');
+    final section = find.byKey(const ValueKey('catalog_feedback'));
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.byKey(const ValueKey('feedback_success_button')),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(SafaehFeedbackHost), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('feedback_success_button')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'The shared surface confirms a completed action.',
+        skipOffstage: false,
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('feedback_dismiss_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('feedback_action_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Undo', skipOffstage: false));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('feedback_action_status')),
+      findsOneWidget,
+    );
+    expect(find.text('Action undone'), findsOneWidget);
+  });
+
   testWidgets('sheet shell, option tiles, and morph stay on the gallery', (
     tester,
   ) async {

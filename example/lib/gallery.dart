@@ -235,6 +235,8 @@ Widget galleryPreview(String id, String Function(String key) t) {
       return SizedBox(height: 360, child: MultiTilePickerDemo(t: t));
     case 'status_body':
       return StatusBodyDemo(t: t);
+    case 'feedback':
+      return SizedBox(height: 300, child: FeedbackDemo(t: t));
     case 'confirm':
       return ConfirmDemo(t: t);
     case 'text_input':
@@ -386,6 +388,11 @@ Widget catalogPhonePreview(
       return Padding(
         padding: const EdgeInsets.all(16),
         child: StatusBodyDemo(t: t),
+      );
+    case 'feedback':
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: FeedbackDemo(t: t),
       );
     case 'confirm':
       return modal(
