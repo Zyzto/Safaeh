@@ -10,6 +10,14 @@ See [VERSIONING.md](VERSIONING.md).
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-10
+
+### Added
+- Added a shared feedback host, typed feedback surfaces, action messages,
+  custom feedback builders, and nav-aware bottom placement.
+- Added a small app-facing feedback interface so host apps can keep
+  localization and domain actions outside Safaeh while sharing presentation.
+
 ## [0.2.3] - 2026-09-10
 
 ### Added

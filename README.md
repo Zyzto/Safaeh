@@ -116,7 +116,7 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 
 ```yaml
 dependencies:
-  safaeh: ^0.2.3
+  safaeh: ^0.2.4
 ```
 
 Or:
@@ -132,14 +132,14 @@ dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.2.3
+      ref: v0.2.4
 ```
 
 ```dart
 import 'package:safaeh/safaeh.dart';
 ```
 
-Current version: **0.2.3**.
+Current version: **0.2.4**.
 
 ---
 
@@ -319,6 +319,35 @@ content insets for custom layouts.
 `SafaehContentBand` centers from incoming constraints and hides `aside` when
 narrow (`SafaehThemeData.isWide`). Hosts with a sibling shell rail keep their
 own `leftOffset` / `bandWidth` math and use `SafaehEndAsideLayout`.
+
+### 8. Shared feedback
+
+Mount one host around the app navigator. The host owns the feedback overlay,
+surface treatment, animation, safe-area handling, and optional bottom-nav
+clearance; the app still owns translated copy and domain callbacks:
+
+```dart
+SafaehFeedbackHost(
+  itemWidthBuilder: (context) => MediaQuery.sizeOf(context).width - 32,
+  bottomInsetBuilder: (context) => 72,
+  child: MaterialApp.router(routerConfig: router),
+);
+
+context.showSafaehFeedback(
+  'Saved',
+  type: SafaehFeedbackType.success,
+);
+
+context.showSafaehFeedbackWithAction(
+  'Deleted',
+  actionLabel: 'Undo',
+  onAction: undo,
+);
+```
+
+Use `showSafaehCustomFeedback` for app-specific content while retaining the
+same host placement and dismissal contract. Keep localization, reporting,
+and business state in the host app.
 
 Band metrics for other apps (app bar, FAB, aside):
 

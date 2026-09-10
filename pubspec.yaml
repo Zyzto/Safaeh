@@ -1,6 +1,6 @@
 name: safaeh
 description: Adaptive sheets, dialogs, camera/QR chrome, page index, and sidenav for Flutter.
-version: 0.2.3
+version: 0.2.4
 homepage: https://github.com/Zyzto/Safaeh
 repository: https://github.com/Zyzto/Safaeh
 issue_tracker: https://github.com/Zyzto/Safaeh/issues
@@ -22,6 +22,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  toastification: ^3.0.3
 
 dev_dependencies:
   flutter_lints: ^6.0.0
