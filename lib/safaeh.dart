@@ -2,6 +2,7 @@
 library;
 
 export 'src/adaptive_sheet.dart';
+export 'src/bottom_nav.dart';
 export 'src/camera_sheet.dart';
 export 'src/confirm.dart';
 export 'src/content_aligned.dart';

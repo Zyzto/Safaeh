@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'bottom_nav.dart';
 import 'floating_surface.dart';
 import 'floating_surface_renderer.dart';
 import 'theme.dart';
@@ -89,6 +90,7 @@ class SafaehPageIndexOverlay extends StatefulWidget {
     required this.activeId,
     required this.onSelect,
     this.floatingAppearance,
+    this.bottomInset,
   });
 
   final String title;
@@ -96,6 +98,10 @@ class SafaehPageIndexOverlay extends StatefulWidget {
   final String? activeId;
   final ValueChanged<SafaehPageIndexEntry> onSelect;
   final SafaehFloatingAppearance? floatingAppearance;
+
+  /// Extra bottom offset for a host-owned floating navigation bar. When null,
+  /// the nearest [SafaehBottomNavScope] supplies its visual inset.
+  final double? bottomInset;
 
   @override
   State<SafaehPageIndexOverlay> createState() => _SafaehPageIndexOverlayState();
@@ -158,6 +164,10 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
     final cs = theme.colorScheme;
     final appearance =
         widget.floatingAppearance ?? SafaehTheme.of(context).floatingAppearance;
+    final bottomInset =
+        widget.bottomInset ??
+        SafaehBottomNavScope.maybeOf(context)?.visualInset ??
+        0.0;
     final showPanel = _open || _anim.status == AnimationStatus.reverse;
     SafaehPageIndexEntry? active;
     for (final entry in widget.entries) {
@@ -181,7 +191,10 @@ class _SafaehPageIndexOverlayState extends State<SafaehPageIndexOverlay>
             ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsetsDirectional.only(end: 16, bottom: 16),
+              padding: EdgeInsetsDirectional.only(
+                end: 16,
+                bottom: 16 + bottomInset,
+              ),
               child: Align(
                 alignment: AlignmentDirectional.bottomEnd,
                 child: Column(

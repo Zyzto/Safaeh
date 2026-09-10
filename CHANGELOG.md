@@ -10,6 +10,15 @@ See [VERSIONING.md](VERSIONING.md).
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-10
+
+### Added
+- Added bottom-navigation metrics with separate visual and scroll-content
+  clearance values.
+- Added `SafaehBottomNavScope`, keyboard-aware nav hiding, and
+  `SafaehBottomNavAwareFabLocation` for shell-owned floating navigation.
+- Added optional bottom-nav clearance to `SafaehPageIndexOverlay`.
+
 ## [0.2.2] - 2026-09-09
 
 ### Added

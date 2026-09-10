@@ -101,7 +101,7 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 | **Dialog** | `showSafaehDialog` centered panel with optional `railWidthOf` |
 | **Theme** | `SafaehTheme` / `SafaehThemeData` for breakpoint, motion, radius, rail widths, camera compact height, `contentMaxWidth`, `floatingAppearance`; `copyWith` |
 | **Motion** | `safaehResolvedMotion` zeros durations when animations are disabled |
-| **Nav** | `SafaehSidenav` temporary drawer (`asDrawer: true`), clipping rail, or overlay rail (`overlay: true`); `SafaehFloatingNavBar` (same `SafaehSidenavDestination`) |
+| **Nav** | `SafaehSidenav` temporary drawer (`asDrawer: true`), clipping rail, or overlay rail (`overlay: true`); `SafaehFloatingNavBar` (same `SafaehSidenavDestination`); keyboard-aware bottom-nav metrics and FAB placement |
 | **Page index** | `SafaehPageIndex`, overlay, `scrollToPageSection`, `safaehActivePageSectionId` (ids + keys only — no `.tr()` on scroll) |
 | **Content** | `safaehBandMetrics`, `SafaehContentBand`, `SafaehEndAsideLayout`, `SafaehContentAlignedAppBar`, `SafaehContentAlignedFabLocation` |
 | **Camera** | `showSafaehCameraSheet` / `SafaehCameraSheetHost` paper-roll compact ↔ full |
@@ -116,7 +116,7 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 
 ```yaml
 dependencies:
-  safaeh: ^0.2.2
+  safaeh: ^0.2.3
 ```
 
 Or:
@@ -132,14 +132,14 @@ dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.2.2
+      ref: v0.2.3
 ```
 
 ```dart
 import 'package:safaeh/safaeh.dart';
 ```
 
-Current version: **0.2.2**.
+Current version: **0.2.3**.
 
 ---
 
@@ -284,6 +284,37 @@ SafaehContentBand(
   child: body,
 );
 ```
+
+When the host owns a floating bottom nav, expose its geometry to overlays and
+FABs instead of repeating offsets. The visual inset is intentionally smaller
+than the scroll-content inset:
+
+```dart
+SafaehBottomNavScope(
+  child: Stack(
+    children: [
+      body,
+      SafaehPageIndexOverlay(
+        title: 'On this page',
+        entries: entries,
+        activeId: activeId,
+        onSelect: onSelect,
+      ),
+    ],
+  ),
+);
+
+final fabLocation = SafaehBottomNavAwareFabLocation.resolve(
+  context,
+  base: FloatingActionButtonLocation.endFloat,
+);
+```
+
+Use `SafaehFloatingNavBar(hideWhenKeyboardVisible: true)` when the shell nav
+should disappear while the IME is open. Set the shell scaffold's
+`resizeToAvoidBottomInset` to `false` so the chrome does not jump during the
+keyboard transition. `SafaehBottomNavMetrics` exposes separate visual and
+content insets for custom layouts.
 
 `SafaehContentBand` centers from incoming constraints and hides `aside` when
 narrow (`SafaehThemeData.isWide`). Hosts with a sibling shell rail keep their

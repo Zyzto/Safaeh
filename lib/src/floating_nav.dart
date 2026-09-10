@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'bottom_nav.dart';
 import 'floating_surface.dart';
 import 'floating_surface_renderer.dart';
 import 'sidenav.dart';
@@ -25,6 +26,7 @@ class SafaehFloatingNavBar extends StatelessWidget {
     this.floatingAppearance,
     this.motion,
     this.margin = const EdgeInsets.symmetric(horizontal: 16),
+    this.hideWhenKeyboardVisible = false,
   });
 
   final int selectedIndex;
@@ -40,6 +42,10 @@ class SafaehFloatingNavBar extends StatelessWidget {
   final SafaehFloatingAppearance? floatingAppearance;
   final Duration? motion;
   final EdgeInsetsGeometry margin;
+
+  /// Hides the bar while the IME is visible. The host shell should also avoid
+  /// resizing its overlay scaffold during that transition.
+  final bool hideWhenKeyboardVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +140,7 @@ class SafaehFloatingNavBar extends StatelessWidget {
     );
     final appearance = floatingAppearance ?? tokens.floatingAppearance;
 
-    return SafeArea(
+    final nav = SafeArea(
       top: false,
       child: Container(
         margin: margin,
@@ -151,5 +157,7 @@ class SafaehFloatingNavBar extends StatelessWidget {
               ),
       ),
     );
+    if (!hideWhenKeyboardVisible) return nav;
+    return SafaehKeyboardAwareNav(duration: motion, child: nav);
   }
 }
