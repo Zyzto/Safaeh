@@ -84,5 +84,32 @@ jobs:
     name: Publish to pub.dev
     needs: verify
     permissions:
+      contents: read
       id-token: write # OIDC for pub.dev
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # setup-dart provisions a short-lived OIDC token for pub.dev. Remove it
+      # while resolving public dependencies because pub.dev treats the
+      # publisher token as an upload credential, then restore it for publish.
+      - name: Set up Dart and OIDC publisher token
+        uses: dart-lang/setup-dart@v1
+
+      - name: Set up Flutter
+        uses: flutter-actions/setup-flutter@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: |
+          dart pub token remove https://pub.dev || true
+          flutter pub get
+          dart pub token add https://pub.dev --env-var PUB_TOKEN
+
+      - name: Publish dry run
+        run: flutter pub publish --dry-run
+
+      - name: Publish to pub.dev
+        run: flutter pub publish --force
