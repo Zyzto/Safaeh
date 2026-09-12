@@ -148,6 +148,8 @@ const catalogTranslations = <String, Map<String, String>>{
     'point_at_code': 'Point at a code',
     'need_camera': 'Need camera permission',
     'open_settings': 'Open settings',
+    'onboarding_designs': 'Onboarding designs',
+    'onboarding_designs_sub': 'Six public flows plus a generic auth surface',
   },
   'ar': {
     'app_title': 'صفائح',
@@ -291,6 +293,8 @@ const catalogTranslations = <String, Map<String, String>>{
     'point_at_code': 'وجّه نحو الرمز',
     'need_camera': 'يلزم إذن الكاميرا',
     'open_settings': 'افتح الإعدادات',
+    'onboarding_designs': 'تصاميم شاشة البدء',
+    'onboarding_designs_sub': 'ستة تدفقات عامة وواجهة دخول عامة',
   },
   'ja': {
     'app_title': 'Safaeh',
@@ -432,6 +436,8 @@ const catalogTranslations = <String, Map<String, String>>{
     'point_at_code': 'コードに向ける',
     'need_camera': 'カメラの許可が必要です',
     'open_settings': '設定を開く',
+    'onboarding_designs': 'オンボーディングデザイン',
+    'onboarding_designs_sub': '6つの公開フローと汎用ログイン画面',
   },
   'zh': {
     'app_title': 'Safaeh',
@@ -573,6 +579,8 @@ const catalogTranslations = <String, Map<String, String>>{
     'point_at_code': '对准代码',
     'need_camera': '需要相机权限',
     'open_settings': '打开设置',
+    'onboarding_designs': '引导设计',
+    'onboarding_designs_sub': '六种公开流程和通用登录界面',
   },
   'es': {
     'app_title': 'Safaeh',
@@ -723,6 +731,9 @@ const catalogTranslations = <String, Map<String, String>>{
     'point_at_code': 'Apunta a un código',
     'need_camera': 'Se necesita permiso de cámara',
     'open_settings': 'Abrir ajustes',
+    'onboarding_designs': 'Diseños de bienvenida',
+    'onboarding_designs_sub':
+        'Seis flujos públicos y una pantalla de acceso genérica',
   },
 };
 
@@ -921,6 +932,11 @@ const catalogItems = <CatalogItem>[
     id: 'qr_message',
     titleKey: 'qr_message',
     subtitleKey: 'qr_message_sub',
+  ),
+  CatalogItem(
+    id: 'onboarding_designs',
+    titleKey: 'onboarding_designs',
+    subtitleKey: 'onboarding_designs_sub',
   ),
   CatalogItem(
     id: 'status_body',

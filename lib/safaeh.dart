@@ -2,6 +2,7 @@
 library;
 
 export 'src/adaptive_sheet.dart';
+export 'src/auth_flow.dart';
 export 'src/bottom_nav.dart';
 export 'src/camera_sheet.dart';
 export 'src/confirm.dart';
@@ -14,6 +15,7 @@ export 'src/floating_surface.dart';
 export 'src/feedback.dart';
 export 'src/option_picker.dart';
 export 'src/option_tile.dart';
+export 'src/onboarding.dart';
 export 'src/page_index.dart';
 export 'src/qr_scanner.dart';
 export 'src/rtl.dart';

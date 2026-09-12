@@ -128,7 +128,15 @@ _FloatingVisual _resolveFloatingVisual(
   final transparency = _normalizedTransparency(
     appearance.transparency ?? _defaultTransparency(appearance.style),
   );
-  final tint = appearance.tintColor ?? fallbackColor;
+  // Glass should read as a light frosted pane rather than inheriting the
+  // component's often-coloured fallback surface. Use the active theme surface
+  // by default so light themes stay white-ish and dark themes stay dark. A
+  // host can still provide a deliberately branded tint through tintColor.
+  final tint =
+      appearance.tintColor ??
+      (appearance.style == SafaehFloatingSurfaceStyle.glass
+          ? cs.surface
+          : fallbackColor);
   final fill = tint.withValues(alpha: tint.a * (1 - transparency / 100));
   final blurSigma = _normalizedBlur(
     appearance.blurSigma ?? _defaultBlurSigma(appearance.style),

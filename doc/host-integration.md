@@ -3,6 +3,104 @@
 Safaeh is chrome only. Copy, routing, state, and camera plugins stay in the
 host. This note is the contract Hisab (and other apps) should follow.
 
+## Onboarding design seam
+
+Safaeh ships six complete public onboarding directions:
+
+```dart
+enum SafaehOnboardingDesign { meadow, orbit, paper, atelier, zen, prism }
+```
+
+Select one directly on `SafaehOnboarding`; Meadow is the default. Hosts can
+persist the selected `design.id` in their own settings, or build a picker from
+`SafaehOnboardingDesignCatalog.all`. Safaeh does not persist application
+preferences.
+
+The onboarding module owns page navigation, trackers, action bars, responsive
+surfaces, motion, semantics, and RTL-safe layout. The host supplies
+`SafaehOnboardingStep` builders, localized `SafaehOnboardingLabels`, language
+and theme controls, and the completion callback. This keeps the module deep:
+one small host interface provides six visual implementations.
+
+`SafaehAuthFlow` is the same kind of presentation adapter for sign-in, sign-up,
+profile, password reset, magic link, provider buttons, and pending email. It
+accepts neutral snapshots and callbacks only. It never imports an auth SDK,
+performs network calls, or decides whether a session is valid.
+
+For a custom host design, use the public `SafaehOnboardingListItem`,
+`SafaehOnboardingTracker`, and `SafaehOnboardingActionBar` primitives while
+keeping the same host-owned copy and callbacks. The example catalog previews
+all six presets, Arabic/RTL, themes, reduced motion, and auth states.
+
+### Persist a design in the host
+
+Safaeh intentionally does not write preferences. Store the stable ID in the
+host and fall back to Meadow when a value is missing or was introduced by a
+future version:
+
+```dart
+final saved = settings.getString('onboarding_design');
+final design = SafaehOnboardingDesignCatalog.tryParse(saved ?? '') ??
+    SafaehOnboardingDesign.meadow;
+
+await settings.setString('onboarding_design', design.id);
+```
+
+### Build a design picker
+
+The catalog metadata is public, so a host does not need to import any private
+Safaeh implementation:
+
+```dart
+DropdownButton<SafaehOnboardingDesign>(
+  value: design,
+  items: [
+    for (final info in SafaehOnboardingDesignCatalog.all)
+      DropdownMenuItem(
+        value: info.design,
+        child: Text(info.displayName),
+      ),
+  ],
+  onChanged: (next) => setState(() => design = next!),
+)
+```
+
+### Localized controls and custom steps
+
+Labels, controls, illustrations, and domain actions remain host-owned. Pass
+localized widgets and content builders directly:
+
+```dart
+SafaehOnboarding(
+  design: design,
+  labels: SafaehOnboardingLabels(
+    back: l10n.back,
+    next: l10n.continueLabel,
+    complete: l10n.finish,
+    stepProgress: (current, total) => l10n.step(current, total),
+  ),
+  actions: SafaehOnboardingHostActions(
+    languageControl: LanguageSwitcher(onChanged: changeLocale),
+    themeControl: ThemeSwitcher(onChanged: changeTheme),
+    onComplete: saveAndFinish,
+  ),
+  steps: [
+    SafaehOnboardingStep(
+      id: 'welcome',
+      titleBuilder: (_) => Text(l10n.welcome),
+      bodyBuilder: (_) => HostIllustrationStep(),
+    ),
+  ],
+)
+```
+
+### Auth is optional
+
+Use `SafaehOnboarding` alone for local or guest onboarding. If the host has an
+account flow, `SafaehAuthFlow` accepts a neutral `SafaehAuthSnapshot` and
+callbacks such as `onProvider` and `onSubmit`; the host remains responsible
+for OAuth, sessions, errors, and routing.
+
 ## `railWidthOf`
 
 `showSafaeh` and `showSafaehDialog` take an optional

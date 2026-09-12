@@ -101,6 +101,46 @@ void main() {
     },
   );
 
+  testWidgets('glass defaults to the theme surface as its tint', (
+    tester,
+  ) async {
+    const surfaceKey = ValueKey('glass_theme_surface');
+    const fallback = Color(0xFF336699);
+    const themeSurface = Color(0xFFF8FAFC);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: const ColorScheme.light(
+            surface: themeSurface,
+            onSurface: Color(0xFF102030),
+          ),
+        ),
+        home: ColoredBox(
+          color: Colors.blue,
+          child: SafaehFloatingSurface(
+            key: surfaceKey,
+            appearance: const SafaehFloatingAppearance(
+              style: SafaehFloatingSurfaceStyle.glass,
+            ),
+            fallbackColor: fallback,
+            child: const SizedBox(width: 160, height: 80),
+          ),
+        ),
+      ),
+    );
+
+    final decorated = tester.widget<DecoratedBox>(
+      _fillDecoration(find.byKey(surfaceKey)),
+    );
+    final color = (decorated.decoration as BoxDecoration).color!;
+    expect(color.r, closeTo(themeSurface.r, 0.01));
+    expect(color.g, closeTo(themeSurface.g, 0.01));
+    expect(color.b, closeTo(themeSurface.b, 0.01));
+    expect(color.a, closeTo(0.52, 0.01));
+  });
+
   testWidgets('zero and full transparency affect only the fill alpha', (
     tester,
   ) async {

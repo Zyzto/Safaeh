@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:safaeh/safaeh.dart';
 
 import 'catalog.dart';
+import 'onboarding_demo.dart';
 import 'pages.dart';
 import 'phone_frame.dart';
 
@@ -284,6 +285,8 @@ Widget galleryPreview(String id, String Function(String key) t) {
         height: 280,
         child: _galleryConstrainedMedia(child: QrMessageDemo(t: t)),
       );
+    case 'onboarding_designs':
+      return const SizedBox(height: 520, child: OnboardingDesignDemo());
     default:
       return const SizedBox.shrink();
   }

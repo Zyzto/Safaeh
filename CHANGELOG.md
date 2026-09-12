@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Tags are `vX.Y.Z` and must match `version:` in [`pubspec.yaml`](pubspec.yaml).
 See [VERSIONING.md](VERSIONING.md).
 
+## [0.3.0] - 2026-09-12
+
+### Added
+- Added six public onboarding design presets: Meadow, Orbit, Paper, Atelier,
+  Zen, and Prism.
+- Added `SafaehOnboarding`, its host-owned step/label/action interfaces,
+  public tracker, action bar, list primitives, and design catalog metadata.
+- Added the vendor-neutral `SafaehAuthFlow` presentation module. It has no
+  authentication or network dependency; hosts provide state and callbacks.
+- Added an interactive onboarding/auth design catalog to the example app.
+
+### Docs
+- Documented public design selection, host persistence, custom controls,
+  custom steps, and the generic auth adapter seam.
+
 ## [0.2.6] - 2026-09-12
 
 ### Fixed

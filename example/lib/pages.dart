@@ -3,6 +3,7 @@ import 'package:safaeh/safaeh.dart';
 
 import 'catalog.dart';
 import 'mock_camera.dart';
+import 'onboarding_demo.dart';
 
 class AdaptiveSheetDemo extends StatelessWidget {
   const AdaptiveSheetDemo({super.key, required this.t, this.raised = false});
@@ -1654,6 +1655,8 @@ Widget _catalogPageBody(String id, String Function(String key) t) {
       return StatusBodyDemo(t: t);
     case 'feedback':
       return FeedbackDemo(t: t);
+    case 'onboarding_designs':
+      return const OnboardingDesignDemo();
     case 'sidenav':
       return SidenavRailDemo(t: t);
     case 'sidenav_drawer':

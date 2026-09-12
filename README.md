@@ -8,9 +8,13 @@
 
 <p align="center">
   <strong>safaeh</strong><br/>
-  Adaptive sheets, camera / QR chrome, page index, and sidenav for Flutter —<br/>
-  host app keeps i18n, routing, and the camera plugin.
+  Adaptive sheets, onboarding designs, camera / QR chrome, page index, and sidenav for Flutter —<br/>
+host app keeps i18n, routing, and the camera plugin.
 </p>
+
+Safaeh is presentation-only: it has no network, cloud, billing, or
+authentication-service dependency. Onboarding and auth widgets receive state
+and callbacks from the host application.
 
 <p align="center">
   <a href="https://zyzto.github.io/Safaeh/"><img alt="Live demo" src="https://img.shields.io/badge/live%20demo-zyzto.github.io%2FSafaeh-8B6914?style=for-the-badge" /></a>
@@ -97,6 +101,7 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 
 | Area | What you get |
 |------|----------------|
+| **Onboarding** | Six public presets through `SafaehOnboardingDesign`; `SafaehOnboarding`, design catalog metadata, host-owned steps, trackers, action bars, list items, and generic `SafaehAuthFlow` |
 | **Sheets** | `showSafaeh` morphs phone sheet ↔ tablet dialog; `showSafaehPicker` / `SafaehOption` (cards, `enabled`); `showSafaehTilePicker` / `SafaehTileOption` (list rows, search); `showSafaehMultiTilePicker` (multi-select); `showSafaehConfirm`, `showSafaehTextInput`, `SafaehStatusBody`, `buildSafaehSheetShell`, `SafaehOptionList`, `SafaehOptionTile` |
 | **Dialog** | `showSafaehDialog` centered panel with optional `railWidthOf` |
 | **Theme** | `SafaehTheme` / `SafaehThemeData` for breakpoint, motion, radius, rail widths, camera compact height, `contentMaxWidth`, `floatingAppearance`; `copyWith` |
@@ -116,7 +121,7 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 
 ```yaml
 dependencies:
-  safaeh: ^0.2.6
+  safaeh: ^0.3.0
 ```
 
 Or:
@@ -132,14 +137,14 @@ dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.2.6
+      ref: v0.3.0
 ```
 
 ```dart
 import 'package:safaeh/safaeh.dart';
 ```
 
-Current version: **0.2.6**.
+Current version: **0.3.0**.
 
 ---
 
@@ -161,7 +166,39 @@ SafaehTheme(
 
 Call-sites can still override breakpoint, motion, and transitions.
 
-### 2. Adaptive sheet
+### 2. Choose a public onboarding design
+
+All six onboarding designs are part of the package. The host chooses the
+design and owns persistence, localization, routing, and domain actions:
+
+```dart
+SafaehOnboarding(
+  design: SafaehOnboardingDesign.orbit,
+  steps: [
+    SafaehOnboardingStep(
+      id: 'welcome',
+      titleBuilder: (context) => const Text('Welcome'),
+      bodyBuilder: (context) => const Text('Your host-owned content.'),
+    ),
+  ],
+  labels: SafaehOnboardingLabels(
+    next: 'Continue',
+    stepProgress: (current, total) => '$current / $total',
+  ),
+  actions: SafaehOnboardingHostActions(
+    languageControl: const LanguageButton(),
+    themeControl: const ThemeButton(),
+    onComplete: () async => SafaehOnboardingResult.completed,
+  ),
+);
+```
+
+Use `SafaehOnboardingDesignCatalog.all` to build a host-owned design picker.
+Safaeh does not save the selection. `SafaehAuthFlow` uses the same six
+presets for generic sign-in, sign-up, recovery, magic-link, and pending-email
+screens; its callbacks are supplied by the host.
+
+### 3. Adaptive sheet
 
 ```dart
 await showSafaeh<void>(
@@ -177,7 +214,7 @@ crosses `tabletBreakpoint`. Pass `phonePlacement: SafaehPhoneSheetPlacement.cent
 to grow the phone sheet so the first content center aligns with the phone
 center (still flush with the bottom).
 
-### 3. Option picker
+### 4. Option picker
 
 ```dart
 final choice = await showSafaehPicker<int>(
@@ -198,7 +235,7 @@ final choice = await showSafaehPicker<int>(
 The in-body title hides when the viewport is wide (header title only).
 `SafaehOption.enabled` greys the card and ignores taps.
 
-### 4. Tile picker (list rows)
+### 5. Tile picker (list rows)
 
 ```dart
 final mode = await showSafaehTilePicker<String>(
@@ -227,7 +264,7 @@ Uses `SafaehOptionList` + `SafaehOptionTile`. Hosts that already wrap
 `showSafaeh` can mount `SafaehTilePickerBody` as the child. Same knobs as
 other `showSafaeh*` helpers (`railWidthOf`, `motion`, …).
 
-### 5. Confirm and text input
+### 6. Confirm and text input
 
 Host passes every label. Phone shows cancel in the action row; tablet uses the
 sheet close control. `showSafaehConfirm` returns `true` if confirmed, `false`
@@ -254,7 +291,7 @@ final name = await showSafaehTextInput(
 );
 ```
 
-### 6. Centered dialog
+### 7. Centered dialog
 
 ```dart
 await showSafaehDialog<void>(
@@ -264,7 +301,7 @@ await showSafaehDialog<void>(
 );
 ```
 
-### 7. Floating nav and content band
+### 8. Floating nav and content band
 
 ```dart
 SafaehFloatingNavBar(
@@ -320,7 +357,7 @@ content insets for custom layouts.
 narrow (`SafaehThemeData.isWide`). Hosts with a sibling shell rail keep their
 own `leftOffset` / `bandWidth` math and use `SafaehEndAsideLayout`.
 
-### 8. Shared feedback
+### 9. Shared feedback
 
 Mount one host around the app navigator. The host owns the feedback overlay,
 surface treatment, animation, safe-area handling, and optional bottom-nav
@@ -373,7 +410,7 @@ SafaehContentAlignedFabLocation.resolve(
 
 See [doc/host-integration.md](doc/host-integration.md).
 
-### 8. Overlay sidenav
+### 10. Overlay sidenav
 
 For a sidenav that expands over the page without reserving layout width, put
 the overlay rail above the host content in a `Stack`:
@@ -402,7 +439,7 @@ Stack(
 The overlay inherits `SafaehThemeData.floatingAppearance` when the direct
 value is omitted. Its scrim, if needed, remains host-owned.
 
-### 9. Shared floating-surface appearance
+### 11. Shared floating-surface appearance
 
 Package-owned floating chrome can inherit one appearance from
 `SafaehThemeData`, or override it on an individual widget or call:
@@ -435,6 +472,10 @@ The presets are `solid`, `translucent`, `glass` (iOS-like), and `vista`
 `shadows` are nullable preset overrides. For sheets and dialogs, a call wins
 over `SafaehRouteOptions.floatingAppearance`, which wins over the theme:
 
+When `tintColor` is omitted, `glass` uses the active theme surface as a
+white-ish frosted tint in light themes and the matching dark surface in dark
+themes. Set `tintColor` when a host wants a branded glass color.
+
 ```dart
 await showSafaeh<void>(
   context: context,
@@ -457,7 +498,7 @@ wide page-index rails, and host-owned FABs remain unchanged. With no appearance
 configured, existing rendering is retained, including the floating nav's
 transparent default.
 
-### 10. Camera / QR chrome
+### 12. Camera / QR chrome
 
 ```dart
 await showSafaehCameraSheet<void>(
