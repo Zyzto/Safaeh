@@ -19,6 +19,7 @@ Widget buildSafaehSheetShell({
     top: false,
     bottom: false,
     child: SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
         padding: EdgeInsets.only(
           top: showTitleInBody ? 0 : padding,

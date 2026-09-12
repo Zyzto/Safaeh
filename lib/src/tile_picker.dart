@@ -81,7 +81,8 @@ class SafaehTilePickerBody<T> extends StatefulWidget {
   final ValueChanged<T>? onSelected;
 
   @override
-  State<SafaehTilePickerBody<T>> createState() => _SafaehTilePickerBodyState<T>();
+  State<SafaehTilePickerBody<T>> createState() =>
+      _SafaehTilePickerBodyState<T>();
 }
 
 class _SafaehTilePickerBodyState<T> extends State<SafaehTilePickerBody<T>> {
@@ -188,6 +189,7 @@ class _SafaehTilePickerBodyState<T> extends State<SafaehTilePickerBody<T>> {
       top: false,
       bottom: false,
       child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
           padding: EdgeInsets.only(top: showTitle ? 0 : 16, bottom: 16),
           child: Column(

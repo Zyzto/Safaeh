@@ -304,11 +304,7 @@ void main() {
     );
     expect(
       handle,
-      matchesSemantics(
-        label: 'Dismiss',
-        isButton: true,
-        hasTapAction: true,
-      ),
+      matchesSemantics(label: 'Dismiss', isButton: true, hasTapAction: true),
     );
     tester.semantics.tap(
       find.semantics.byPredicate((node) => node.id == handle.id),
@@ -493,10 +489,7 @@ void main() {
                               title: 'Choose account',
                               selected: 'cash',
                               options: const [
-                                SafaehTileOption(
-                                  value: 'card',
-                                  label: 'Card',
-                                ),
+                                SafaehTileOption(value: 'card', label: 'Card'),
                               ],
                             );
                           },
@@ -611,7 +604,9 @@ void main() {
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    final panelTop = tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dy;
+    final panelTop = tester
+        .getTopLeft(find.byKey(const ValueKey('safaeh_panel')))
+        .dy;
     final titleTop = tester.getTopLeft(find.text('Delete?')).dy;
     expect(titleTop - panelTop, lessThan(60));
   });
@@ -660,9 +655,7 @@ void main() {
                   child: SafaehTilePickerBody<String>(
                     title: 'Choose',
                     tabletBreakpoint: 10000,
-                    options: [
-                      SafaehTileOption(value: 'a', label: 'Alpha'),
-                    ],
+                    options: [SafaehTileOption(value: 'a', label: 'Alpha')],
                   ),
                 ),
               ],
@@ -710,7 +703,9 @@ void main() {
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    final withRail = tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dx;
+    final withRail = tester
+        .getTopLeft(find.byKey(const ValueKey('safaeh_panel')))
+        .dx;
     await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
 
@@ -731,7 +726,9 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    withoutRail = tester.getTopLeft(find.byKey(const ValueKey('safaeh_panel'))).dx;
+    withoutRail = tester
+        .getTopLeft(find.byKey(const ValueKey('safaeh_panel')))
+        .dx;
     expect(withRail, closeTo(withoutRail + 40, 8));
   });
 
@@ -840,7 +837,9 @@ void main() {
     await tester.pump();
     expect(extraFocus.hasFocus, isTrue);
     expect(
-      tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close)).tooltip,
+      tester
+          .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close))
+          .tooltip,
       'Close',
     );
     expect(
@@ -1136,7 +1135,9 @@ void main() {
     expect(withRail, closeTo(withoutRail - 40, 8));
   });
 
-  testWidgets('phone sheet lists scroll; handle drag dismisses', (tester) async {
+  testWidgets('phone sheet lists scroll; handle drag dismisses', (
+    tester,
+  ) async {
     await setPhone(tester);
     await tester.pumpWidget(
       MaterialApp(
@@ -1167,7 +1168,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
 
-    await tester.drag(find.text('row-5'), const Offset(0, 220));
+    // Reverse partway without reaching the scrollable's start; a downward
+    // drag at the start edge is covered by the sheet-dismiss test below.
+    await tester.drag(find.text('row-5'), const Offset(0, 48));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
 
@@ -1175,6 +1178,120 @@ void main() {
       find.byKey(const ValueKey('safaeh_drag_handle')),
       const Offset(0, 220),
     );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsNothing);
+  });
+
+  testWidgets('phone sheet paints through the bottom safe-area inset', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    tester.view.padding = const FakeViewPadding(bottom: 34);
+    tester.view.viewPadding = const FakeViewPadding(bottom: 34);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaeh<void>(
+              context: context,
+              title: 'Choose',
+              child: const Text('sheet-body'),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    final panel = find.byKey(const ValueKey('safaeh_panel'));
+    expect(tester.getBottomLeft(panel).dy, closeTo(800, 1));
+  });
+
+  testWidgets(
+    'phone sheet dismisses when a scrollable reaches its top and is dragged down',
+    (tester) async {
+      await setPhone(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showSafaeh<void>(
+                context: context,
+                title: 'Rows',
+                child: SizedBox(
+                  height: 320,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < 20; i++)
+                          SizedBox(height: 48, child: Text('drag-row-$i')),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final panel = find.byKey(const ValueKey('safaeh_panel'));
+      final restingBottom = tester.getBottomLeft(panel).dy;
+
+      await tester.drag(find.text('drag-row-2'), const Offset(0, 48));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+      expect(tester.getBottomLeft(panel).dy, closeTo(restingBottom, 1));
+
+      await tester.drag(find.text('drag-row-2'), const Offset(0, -120));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+
+      // The same gesture pattern users make after reaching the list's start:
+      // the content gives the pull to the sheet and the threshold dismisses.
+      await tester.drag(find.text('drag-row-2'), const Offset(0, 220));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('safaeh_panel')), findsNothing);
+    },
+  );
+
+  testWidgets('short picker sheet can be pulled down from its content', (
+    tester,
+  ) async {
+    await setPhone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSafaehTilePicker<String>(
+              context: context,
+              title: 'Language',
+              selected: 'en',
+              options: const [
+                SafaehTileOption(value: 'en', label: 'English'),
+                SafaehTileOption(value: 'ar', label: 'Arabic'),
+              ],
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('safaeh_panel')), findsOneWidget);
+
+    await tester.drag(find.text('Arabic'), const Offset(0, 120));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('safaeh_panel')), findsNothing);
   });
@@ -1220,7 +1337,9 @@ void main() {
     expect(ink.canRequestFocus, isTrue);
   });
 
-  testWidgets('phone showSafaeh slides the panel up from below', (tester) async {
+  testWidgets('phone showSafaeh slides the panel up from below', (
+    tester,
+  ) async {
     await setPhone(tester);
     await tester.pumpWidget(
       MaterialApp(
@@ -1312,10 +1431,7 @@ void main() {
     expect(panel.bottom, closeTo(800, 2));
     expect(panel.height, greaterThan(400));
     final first = tester.getRect(find.text('sheet-body'));
-    expect(
-      first.center.dy,
-      closeTo(400, 16),
-    );
+    expect(first.center.dy, closeTo(400, 16));
   });
 
   testWidgets('phone center placement remasures when the viewport grows', (
@@ -1348,10 +1464,7 @@ void main() {
     final tall = tester.getRect(find.byKey(const ValueKey('safaeh_panel')));
     expect(tall.bottom, closeTo(1200, 2));
     expect(tall.height, greaterThan(short.height));
-    expect(
-      tester.getRect(find.text('sheet-body')).center.dy,
-      closeTo(600, 16),
-    );
+    expect(tester.getRect(find.text('sheet-body')).center.dy, closeTo(600, 16));
   });
 
   testWidgets('raw showSafaeh paints the title on phone', (tester) async {

@@ -69,47 +69,48 @@ class SafaehOptionPickerBody<T> extends StatelessWidget {
       top: false,
       bottom: false,
       child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (showTitle) ...[
-              titleBuilder?.call(context, titleStyle) ??
-                  Text(title ?? '', style: titleStyle),
-              const SizedBox(height: 10),
-            ],
-            for (var i = 0; i < options.length; i++) ...[
-              if (i > 0) const SizedBox(height: 6),
-              _OptionCard<T>(
-                option: options[i],
-                selected: selected != null && options[i].value == selected,
-                onTap: options[i].enabled
-                    ? () {
-                        final value = options[i].value;
-                        final intercept = onSelected;
-                        if (intercept != null) {
-                          intercept(value);
-                          return;
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (showTitle) ...[
+                titleBuilder?.call(context, titleStyle) ??
+                    Text(title ?? '', style: titleStyle),
+                const SizedBox(height: 10),
+              ],
+              for (var i = 0; i < options.length; i++) ...[
+                if (i > 0) const SizedBox(height: 6),
+                _OptionCard<T>(
+                  option: options[i],
+                  selected: selected != null && options[i].value == selected,
+                  onTap: options[i].enabled
+                      ? () {
+                          final value = options[i].value;
+                          final intercept = onSelected;
+                          if (intercept != null) {
+                            intercept(value);
+                            return;
+                          }
+                          safaehPop(context, value);
                         }
-                        safaehPop(context, value);
-                      }
-                    : null,
-              ),
-            ],
-            if (footer != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                footer!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
-                  height: 1.3,
+                      : null,
                 ),
-              ),
+              ],
+              if (footer != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  footer!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );
@@ -199,77 +200,80 @@ class _OptionCard<T> extends StatelessWidget {
             onTap: onTap,
             borderRadius: radius,
             child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              border: Border.all(color: selected ? cs.primary : cs.outline),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    option.icon,
-                    size: 20,
-                    color: selected ? cs.onPrimaryContainer : cs.onSurface,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          option.label,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: selected
-                                ? cs.onPrimaryContainer
-                                : cs.onSurface,
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                border: Border.all(color: selected ? cs.primary : cs.outline),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      option.icon,
+                      size: 20,
+                      color: selected ? cs.onPrimaryContainer : cs.onSurface,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            option.label,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: selected
+                                  ? cs.onPrimaryContainer
+                                  : cs.onSurface,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          option.subtitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: selected
-                                ? cs.onPrimaryContainer
-                                : cs.onSurfaceVariant,
-                            height: 1.25,
+                          const SizedBox(height: 2),
+                          Text(
+                            option.subtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: selected
+                                  ? cs.onPrimaryContainer
+                                  : cs.onSurfaceVariant,
+                              height: 1.25,
+                            ),
                           ),
-                        ),
-                        if (option.badge != null) ...[
-                          const SizedBox(height: 6),
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cs.tertiaryContainer.withValues(
-                                  alpha: 0.85,
+                          if (option.badge != null) ...[
+                            const SizedBox(height: 6),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
                                 ),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                option.badge!,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: cs.onTertiaryContainer,
+                                decoration: BoxDecoration(
+                                  color: cs.tertiaryContainer.withValues(
+                                    alpha: 0.85,
+                                  ),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  option.badge!,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.onTertiaryContainer,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );

@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Tags are `vX.Y.Z` and must match `version:` in [`pubspec.yaml`](pubspec.yaml).
 See [VERSIONING.md](VERSIONING.md).
 
+## [0.2.6] - 2026-09-12
+
+### Fixed
+- Phone sheet surfaces now remain flush with the viewport bottom safe-area
+  inset while body content stays clear of the home indicator.
+- Primary scrollable sheet bodies can hand a downward pull at their top edge
+  to the sheet for drag-to-dismiss.
+
 ## [0.2.5] - 2026-09-10
 
 ### Docs

@@ -571,6 +571,9 @@ class _AdaptiveSheetHost extends StatelessWidget {
     final appearance =
         floatingAppearance ?? SafaehTheme.of(context).floatingAppearance;
     final isWide = size.width >= tabletBreakpoint;
+    final phoneBottomInset = !isWide && useSafeArea && viewInsets.bottom <= 0
+        ? MediaQuery.paddingOf(context).bottom
+        : 0.0;
     final railWidth = isWide ? (railWidthOf?.call(context) ?? 0.0) : 0.0;
 
     final availableWidth = math.max(0.0, size.width - railWidth);
@@ -707,6 +710,16 @@ class _AdaptiveSheetHost extends StatelessWidget {
       ],
     );
 
+    // Keep the safe-area padding inside the painted panel. Wrapping the
+    // entire panel in SafeArea would shrink the panel above the home-indicator
+    // inset and leave the underlying page visible beneath it.
+    final panelContent = phoneBottomInset > 0
+        ? Padding(
+            padding: EdgeInsets.only(bottom: phoneBottomInset),
+            child: panelBody,
+          )
+        : panelBody;
+
     final fill = cs.surfaceContainerLow;
     final outline = cs.outline;
 
@@ -720,7 +733,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
                   shape: sheetShape,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxHeight: effectiveMaxHeight),
-                    child: panelBody,
+                    child: panelContent,
                   ),
                 )
               : KeyedSubtree(
@@ -734,7 +747,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
                       constraints: BoxConstraints(
                         maxHeight: effectiveMaxHeight,
                       ),
-                      child: panelBody,
+                      child: panelContent,
                     ),
                   ),
                 )
@@ -757,7 +770,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
                       ),
                       child: Material(
                         color: Colors.transparent,
-                        child: panelBody,
+                        child: panelContent,
                       ),
                     )
                   : SafaehFloatingSurface(
@@ -765,7 +778,7 @@ class _AdaptiveSheetHost extends StatelessWidget {
                       fallbackColor: fill,
                       fallbackBorder: Border.all(color: outline),
                       borderRadius: panelRadius,
-                      child: panelBody,
+                      child: panelContent,
                     ),
             ),
           );
@@ -840,7 +853,9 @@ class _AdaptiveSheetHost extends StatelessWidget {
                 padding: EdgeInsetsDirectional.only(start: railWidth),
                 child: SafeArea(
                   top: useSafeArea && isWide,
-                  bottom: useSafeArea && !isWide && viewInsets.bottom <= 0,
+                  // Phone bottom padding is applied inside [panelContent] so
+                  // the surface itself remains flush with the viewport.
+                  bottom: false,
                   left: false,
                   right: false,
                   child: entering,
@@ -907,6 +922,7 @@ class _PhoneSheetDragDismissState extends State<_PhoneSheetDragDismiss>
   final ValueNotifier<double> _dy = ValueNotifier<double>(0);
   late final AnimationController _snap;
   Animation<double>? _snapAnim;
+  bool _contentDragActive = false;
 
   @override
   void initState() {
@@ -929,13 +945,14 @@ class _PhoneSheetDragDismissState extends State<_PhoneSheetDragDismiss>
   }
 
   void _onDragUpdate(DragUpdateDetails details) {
+    _updateDrag(details.primaryDelta ?? details.delta.dy);
+  }
+
+  void _updateDrag(double deltaDy) {
     _snap.stop();
     _snapAnim = null;
     final maxDy = MediaQuery.sizeOf(context).height;
-    final next = (_dy.value + (details.primaryDelta ?? details.delta.dy)).clamp(
-      0.0,
-      maxDy,
-    );
+    final next = (_dy.value + deltaDy).clamp(0.0, maxDy);
     if (next != _dy.value) _dy.value = next;
   }
 
@@ -951,6 +968,46 @@ class _PhoneSheetDragDismissState extends State<_PhoneSheetDragDismiss>
 
   void _onDragCancel() {
     if (_dy.value > 0) _snapBack();
+  }
+
+  bool _isAtScrollStart(ScrollMetrics metrics) {
+    return metrics.pixels <= metrics.minScrollExtent + 0.5;
+  }
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    // Only the sheet's primary scrollable should hand its top-edge drag to
+    // the sheet. Nested lists keep their own scrolling behavior.
+    if (notification.depth != 0) return false;
+
+    if (notification is ScrollStartNotification) {
+      _contentDragActive = false;
+    } else if (notification is OverscrollNotification) {
+      // At the start edge, Flutter reports a negative overscroll while the
+      // user's finger moves down. Reuse the same distance/threshold as the
+      // grab-handle drag, so a short pull settles back and a deliberate pull
+      // dismisses the sheet.
+      if (notification.overscroll < 0 &&
+          _isAtScrollStart(notification.metrics)) {
+        _contentDragActive = true;
+        _updateDrag(-notification.overscroll);
+      } else if (_contentDragActive && notification.overscroll > 0) {
+        // The user reversed direction while the sheet was being pulled.
+        _updateDrag(-notification.overscroll);
+      }
+    } else if (notification is ScrollUpdateNotification && _contentDragActive) {
+      // Once the sheet has taken the gesture, let an upward reversal reduce
+      // the pull before the scrollable starts moving again.
+      final delta = notification.scrollDelta ?? 0.0;
+      if (delta > 0) _updateDrag(-delta);
+    } else if (notification is ScrollEndNotification && _contentDragActive) {
+      _contentDragActive = false;
+      _onDragEnd(
+        DragEndDetails(
+          primaryVelocity: notification.dragDetails?.primaryVelocity,
+        ),
+      );
+    }
+    return false;
   }
 
   Future<void> _tryDismiss() async {
@@ -980,12 +1037,15 @@ class _PhoneSheetDragDismissState extends State<_PhoneSheetDragDismiss>
       onUpdate: _onDragUpdate,
       onEnd: _onDragEnd,
       onCancel: _onDragCancel,
-      child: ValueListenableBuilder<double>(
-        valueListenable: _dy,
-        builder: (context, dy, child) {
-          return Transform.translate(offset: Offset(0, dy), child: child);
-        },
-        child: widget.child,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _onScrollNotification,
+        child: ValueListenableBuilder<double>(
+          valueListenable: _dy,
+          builder: (context, dy, child) {
+            return Transform.translate(offset: Offset(0, dy), child: child);
+          },
+          child: widget.child,
+        ),
       ),
     );
   }

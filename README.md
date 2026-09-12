@@ -116,7 +116,7 @@ Captured with [`widgets_to_image`](https://pub.dev/packages/widgets_to_image) (`
 
 ```yaml
 dependencies:
-  safaeh: ^0.2.4
+  safaeh: ^0.2.6
 ```
 
 Or:
@@ -132,14 +132,14 @@ dependencies:
   safaeh:
     git:
       url: https://github.com/Zyzto/Safaeh.git
-      ref: v0.2.4
+      ref: v0.2.6
 ```
 
 ```dart
 import 'package:safaeh/safaeh.dart';
 ```
 
-Current version: **0.2.4**.
+Current version: **0.2.6**.
 
 ---
 

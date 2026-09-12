@@ -38,6 +38,15 @@ block after the handle aligns with the vertical center of the phone
 (still flush with the bottom). Tablet+ dialogs stay centered either
 way. Camera / QR paper-roll sheets stay bottom-docked.
 
+Phone sheets keep their painted surface flush with the viewport's bottom
+safe-area inset while keeping body content above the home indicator. Standard
+scrollable sheet bodies also hand a downward pull to the sheet when their
+scroll position reaches the start edge: a pull shorter than
+`SheetHandleDrag.dismissDistance` settles back, and a deliberate pull
+dismisses when `barrierDismissible` is enabled. This works for tile pickers,
+confirmation sheets, text-input sheets, and host bodies that use a primary
+scrollable.
+
 ## Confirm result
 
 `showSafaehConfirm` returns `true` if confirmed, `false` if the phone
